@@ -1,0 +1,40 @@
+@startuml
+title Architecture Overview
+actor operator
+
+node Monitoring_station as "Monitoring Station" {
+    file f1 as "master_monitoring.py"
+    file f01 as "config.py"
+    file f2 as "meta_monitoring.py"
+    file f3 as "monitoring.py"
+    file f4 as "<additional_monitoring_node.py>"
+}
+
+
+node Robot1 {
+    file f6 as "meta_monitoring.py"
+    file f7 as "monitoring.py"
+    file f8 as "<additional_monitoring_node.py>"
+}
+
+node Robot2 {
+    file f10 as "meta_monitoring.py"
+    file f11 as "monitoring.py"
+    file f12 as "<additional_monitoring_node.py>"
+}
+
+operator -> f1
+f1 -> f6 : "SSH connection"
+f1 --> f10 : "SSH connection"
+
+f6 -- f7 : "Subprocess"
+f6 -- f8 : "Subprocess"
+
+f10 -- f11 : "Subprocess"
+f10 -- f12 : "Subprocess"
+
+f01 --> f1
+f1 -- f2 : "Subprocess"
+f2 -- f3 : "Subprocess"
+f2 -- f4 : "Subprocess"
+@enduml
