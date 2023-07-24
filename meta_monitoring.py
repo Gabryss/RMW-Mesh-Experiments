@@ -7,10 +7,17 @@ from colorama import Fore, Style
 
 class MetaMonitoring:
 
-    def __init__(self, experiment_name_p, experiment_duration_p=30, experiment_timestep_p=0.1, is_robot_p=False, robot_name_p="leo02", monitoring_path_p="~", database_path_p="~") -> None:
+    def __init__(self, experiment_name_p, experiment_duration_p=30, experiment_timestep_p=0.1, is_robot_p=False, robot_name_p="leo02", monitoring_path_p="", database_path_p="", process_number_p=1) -> None:
+        if monitoring_path_p == None:
+            self.monitoring_path = os.getcwd()
+        else:
+            self.monitoring_path = monitoring_path_p
         
-        self.monitoring_path = monitoring_path_p
-        self.database_path = database_path_p
+        if database_path_p == None or database_path_p == '':
+            self.database_path = os.getcwd() + "/dataset"
+        else:
+            self.database_path = database_path_p
+        
         self.is_robot = self.boolean_string_check(is_robot_p)
         self.robot_name = robot_name_p
         if self.is_robot:
@@ -19,7 +26,7 @@ class MetaMonitoring:
             self.experiment_name = experiment_name_p + "_local"
         self.experiment_duration = experiment_duration_p
         self.experiment_timestep = experiment_timestep_p
-        self.process_number = 3
+        self.process_number = process_number_p
         self.function_name = [self.global_monitoring, self.point_cloud_data_monitoring, self.point_cloud_logger_monitoring]
         self.results = []
         self.queue = mp.Queue()
@@ -48,6 +55,7 @@ class MetaMonitoring:
 
             for proc_index in range(self.process_number):
                 if proc_index > 0:
+                    pass
                     self.create_process(self.function_name[2], str(arguments[proc_index-1])) # Point cloud monitoring
                 else:
                     self.create_process(self.function_name[proc_index]) # Global monitoring
@@ -103,8 +111,12 @@ class MetaMonitoring:
         """
         for result in self.results:
                 print(f"Result of process {self.experiment_name}:")
-                if result:
-                    print(Fore.GREEN + str(result))
+                if not result.stderr:
+                    print(Fore.GREEN + str(result.stdout))
+                    print(Style.RESET_ALL)
+                else:
+                    print(Fore.RED + "Error:")
+                    print(Fore.RED + str(result.stderr))
                     print(Style.RESET_ALL)
 
 
@@ -139,6 +151,7 @@ if __name__ == "__main__":
     parser.add_argument("-target", help="Name of the remote target device", type=str)
     parser.add_argument("-monitoring_script_path", help="Path of the monitoring script to run", type=str)
     parser.add_argument("-database_path", help="Path of the database location", type=str)
+    parser.add_argument("-process_number", help="Number of process (monitoring scripts) per robot", default=1, type=int)
     
     args = parser.parse_args()
     config = vars(args)
@@ -148,4 +161,5 @@ if __name__ == "__main__":
                                      is_robot_p=config['remote'],
                                      robot_name_p=config['target'],
                                      monitoring_path_p=config['monitoring_script_path'],
-                                     database_path_p=config['database_path'])
+                                     database_path_p=config['database_path'],
+                                     process_number_p=config['process_number'])

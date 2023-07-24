@@ -7,7 +7,7 @@ import argparse
 
 class Monitoring:
 
-    def __init__(self, experiment_name_p, experiment_duration_p=30, experiment_timestep_p=0.1, database_path_p="~/dataset") -> None:
+    def __init__(self, experiment_name_p, experiment_duration_p=30, experiment_timestep_p=0.1, database_path_p="~/dataset"):
         """
         Defaults attributes of the monitoring class are:
         - Experiment duration : 30 seconds
@@ -20,7 +20,10 @@ class Monitoring:
         self.data = []
         self.old_network_data = None
         self.new_network_data = None
-        self.path = os.path.expanduser(database_path_p)
+        if database_path_p == None or database_path_p == '':
+            self.path = os.getcwd()+"/dataset"
+        else:
+            self.path = os.path.expanduser(database_path_p)
         self.create_csv(self.experiment_name)
         self.get_data()
         exit()
@@ -148,7 +151,7 @@ if __name__ == "__main__":
     parser.add_argument("name", help="Experiment's name", type=str)
     parser.add_argument("duration", help="Experiment's duration", type=float)
     parser.add_argument("step", help="Experiment's timestep measure", type=float)
-    parser.add_argument("-database_path", help="Path of the database location", type=str)
+    parser.add_argument("-database_path", help="Path of the database location", default='~/dataset', type=str)
     
     args = parser.parse_args()
     config = vars(args)

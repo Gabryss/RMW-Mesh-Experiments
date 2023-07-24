@@ -14,11 +14,16 @@ class MasterMonitoring:
         self.username_list = Config.ROBOTS_USERNAME_LIST.value
         self.password_list = Config.ROBOTS_PASSWORD_LIST.value
         self.robot_name_list = Config.ROBOTS_NAME_LIST.value
+        if Config.LOCAL_DATASET_PATH.value == '' or Config.LOCAL_DATASET_PATH.value == None:
+            self.local_dataset_path = os.getcwd()
+        if Config.LOCAL_DATASET_PATH.value == '' or Config.LOCAL_DATASET_PATH.value == None:
+            self.local_dataset_path = os.getcwd()
         self.arguments = [str(Config.EXPERIMENT_NAME.value).replace(' ','_'), str(Config.EXPERIMENT_TIME.value), str(Config.EXPERIMENT_TIMESTEP.value)]
         self.results = []
         # self.lock = threading.Event()
-        self.lock_barrier = threading.Barrier(Config.REMOTE_ROBOT_NUMBER.value+1)
+        # self.lock_barrier = threading.Barrier(Config.REMOTE_ROBOT_NUMBER.value+1)
         self.start_threading()
+        exit()
 
 
     def start_threading(self):
@@ -66,6 +71,11 @@ class MasterMonitoring:
         host = str(args_p[6])
         username = str(args_p[7])
         password = str(args_p[8])
+        if database_path == '' or database_path == None:
+            database_path = os.getcwd()
+        if Config.REMOTE_MONITORING_DIR.value == '' or Config.REMOTE_MONITORING_DIR.value == None:
+            remote_dir_path = os.getcwd()
+
         try:
             # Connect to the remote host
             ssh.connect(host, username=username, password=password)
@@ -78,7 +88,7 @@ class MasterMonitoring:
             # print("Lock passed")
 
 
-            stdin, stdout, stderr = ssh.exec_command(f"python3 {Config.REMOTE_MONITORING_DIR.value}/meta_monitoring.py {name} {duration} {step} -r -target {target_name} -monitoring_script_path {remote_dir_path} -database_path {database_path}")
+            stdin, stdout, stderr = ssh.exec_command(f"python3 {remote_dir_path}/meta_monitoring.py {name} {duration} {step} -r -target {target_name} -monitoring_script_path {remote_dir_path} -database_path {database_path} -process_number {Config.PROCESS_PER_ROBOTS.value}")
 
             # Wait for script execution to complete
             exit_status = stdout.channel.recv_exit_status()
@@ -130,10 +140,17 @@ class MasterMonitoring:
         exp_duration = arg_p[1]
         exp_step = arg_p[2]
         exp_path = arg_p[3]
-        if Config.USE_REMOTE.value:
-            self.lock_barrier.wait()
-        result = subprocess.run(["python3", f"{Config.LOCAL_MONITORING_DIR.value}/meta_monitoring.py", f"{exp_name}", f"{exp_duration}", f"{exp_step}", "-monitoring_script", f"{exp_path}", "-database_path", f"{Config.LOCAL_DATASET_PATH.value}"], cwd=os.path.expanduser('~'), capture_output=True, text=True)
-        
+        if exp_path == '':
+            exp_path = os.getcwd()
+        # if Config.USE_REMOTE.value:
+            # self.lock_barrier.wait()
+        if Config.LOCAL_MONITORING_DIR.value:
+            result = subprocess.run(["python3", f"{Config.LOCAL_MONITORING_DIR.value}/meta_monitoring.py", f"{exp_name}", f"{exp_duration}", f"{exp_step}", "-monitoring_script", f"{exp_path}", "-database_path", f"{Config.LOCAL_DATASET_PATH.value}",  "-process_number", f"{Config.PROCESS_PER_ROBOTS.value}"], cwd=os.path.expanduser('~'), capture_output=True, text=True)
+        else:
+            current_directory = os.getcwd()
+            result = subprocess.run(["python3", f"{current_directory}/meta_monitoring.py", f"{exp_name}", f"{exp_duration}", f"{exp_step}", "-monitoring_script", f"{exp_path}", "-database_path", f"{Config.LOCAL_DATASET_PATH.value}", "-process_number", f"{Config.PROCESS_PER_ROBOTS.value}"], cwd=os.path.expanduser('~'), capture_output=True, text=True)
+
+
         print(Fore.LIGHTYELLOW_EX + "\n\n\n\n=================================")
         print(Style.RESET_ALL)
         print("Local output:")
