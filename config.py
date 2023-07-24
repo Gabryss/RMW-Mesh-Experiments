@@ -37,17 +37,18 @@ class Config(Enum):
     EXPERIMENT_TIME = 1
     EXPERIMENT_TIMESTEP = 0.1
     REMOTE_ROBOT_NUMBER = 2
+    PROCESS_PER_ROBOTS = 1 # If this value is greated than the actual number of monitoring script, the script will be frozen
 
-    LOCAL_MONITORING_DIR = "Documents/TheLab/python"
-    REMOTE_MONITORING_DIR = "Documents/TheLab/python"
+    LOCAL_MONITORING_DIR = ""
+    REMOTE_MONITORING_DIR = ""
 
 
     REMOTE_DATASET_PATH = "~/dataset"
-    LOCAL_DATASET_PATH = "~/Documents/TheLab/python/database"
+    LOCAL_DATASET_PATH = ""
 
     # Activate/Deactivate local and remote monitoring
-    USE_LOCAL = False
-    USE_REMOTE = True
+    USE_LOCAL = True
+    USE_REMOTE = False
 
     # Download the entire database of every robot on the local database 
     GET_ENTIRE_DATABASE = False
