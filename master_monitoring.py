@@ -176,7 +176,8 @@ class MasterMonitoring:
         """
         sftp = sftp_p
         local_directory = local_dir_p
-        remote_directory = remote_dir_p
+        # remote_directory = remote_dir_p
+        remote_directory = "/home/xavier/dataset" # HARDCODED LIME, NEED TO BE MODIFIED
         file_count = file_count_p
         error=False
 

@@ -18,7 +18,7 @@ class MetaMonitoring:
         else:
             self.database_path = database_path_p
         
-        self.is_robot = self.boolean_string_check(is_robot_p)
+        self.is_robot = is_robot_p
         self.robot_name = robot_name_p
         if self.is_robot:
             self.experiment_name = experiment_name_p + f"_{self.robot_name}"
@@ -96,13 +96,6 @@ class MetaMonitoring:
             name = name_p
         result = subprocess.run(["ros2", "run", "mesh", "exp", "pc_logger", "--ros-args", "-p", f"robot_name:={name}", "-p", f"experiment_name:={self.experiment_name}"])
         self.queue.put(result)
-
-
-    def boolean_string_check(self, boolean_string_p):
-        if boolean_string_p == "true" or boolean_string_p == "True":
-            return True
-        else:
-            return False
 
 
     def display_result(self):
