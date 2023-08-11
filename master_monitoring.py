@@ -14,14 +14,14 @@ class MasterMonitoring:
         self.username_list = Config.ROBOTS_USERNAME_LIST.value
         self.password_list = Config.ROBOTS_PASSWORD_LIST.value
         self.robot_name_list = Config.ROBOTS_NAME_LIST.value
+        self.zenoh = Config.ZENOH.value
         if Config.LOCAL_DATASET_PATH.value == '' or Config.LOCAL_DATASET_PATH.value == None:
             self.local_dataset_path = os.getcwd()
         if Config.LOCAL_DATASET_PATH.value == '' or Config.LOCAL_DATASET_PATH.value == None:
             self.local_dataset_path = os.getcwd()
         self.arguments = [str(Config.EXPERIMENT_NAME.value).replace(' ','_'), str(Config.EXPERIMENT_TIME.value), str(Config.EXPERIMENT_TIMESTEP.value)]
         self.results = []
-        # self.lock = threading.Event()
-        # self.lock_barrier = threading.Barrier(Config.REMOTE_ROBOT_NUMBER.value+1)
+        self.nb_connection = len(Config.ROBOTS_HOST_LIST.value)
         self.start_threading()
         exit()
 
@@ -36,7 +36,7 @@ class MasterMonitoring:
 
         # Remote robots
         if Config.USE_REMOTE.value:
-            for thread_index in range(Config.REMOTE_ROBOT_NUMBER.value):
+            for thread_index in range(self.nb_connection):
                 thread = threading.Thread(target=self.run_remote_script, args=self.arguments+[self.robot_name_list[thread_index], Config.REMOTE_MONITORING_DIR.value, Config.REMOTE_DATASET_PATH.value, self.host_list[thread_index], self.username_list[thread_index], self.password_list[thread_index]])
                 thread.start()
                 self.threads.append(thread)
@@ -71,6 +71,8 @@ class MasterMonitoring:
         host = str(args_p[6])
         username = str(args_p[7])
         password = str(args_p[8])
+
+
         if database_path == '' or database_path == None:
             database_path = os.getcwd()
         if Config.REMOTE_MONITORING_DIR.value == '' or Config.REMOTE_MONITORING_DIR.value == None:
@@ -79,16 +81,11 @@ class MasterMonitoring:
         try:
             # Connect to the remote host
             ssh.connect(host, username=username, password=password)
-            
-            # Wait for all scripts to be ready
-            # self.lock_barrier.wait()
 
-            # Signal that the connection with the remote script is established
-            # self.lock.set()
-            # print("Lock passed")
-
-
-            stdin, stdout, stderr = ssh.exec_command(f"python3 {remote_dir_path}/meta_monitoring.py {name} {duration} {step} -r -target {target_name} -monitoring_script_path {remote_dir_path} -database_path {database_path} -process_number {Config.PROCESS_PER_ROBOTS.value}")
+            if self.zenoh:
+                stdin, stdout, stderr = ssh.exec_command(f"source /opt/ros/foxy/setup.bash && export ROS_DOMAIN_ID=1 && python3 {remote_dir_path}/meta_monitoring.py {name} {duration} {step} -r -z -target {target_name} -monitoring_script_path {remote_dir_path} -database_path {database_path} -packet_size {Config.PACKET_SIZE.value} -ros_ws_path {Config.LEO02_ROS_WS_PATH.value} -ros_distro {Config.LEO02_ROS_DISTRO.value}")
+            else:
+                stdin, stdout, stderr = ssh.exec_command(f"source /opt/ros/foxy/setup.bash && export ROS_DOMAIN_ID=1 && python3 {remote_dir_path}/meta_monitoring.py {name} {duration} {step} -r -target {target_name} -monitoring_script_path {remote_dir_path} -database_path {database_path} -packet_size {Config.PACKET_SIZE.value} -ros_ws_path {Config.LEO02_ROS_WS_PATH.value} -ros_distro {Config.LEO02_ROS_DISTRO.value}")
 
             # Wait for script execution to complete
             exit_status = stdout.channel.recv_exit_status()
@@ -121,7 +118,7 @@ class MasterMonitoring:
 
             sftp = ssh.open_sftp()
 
-            self.copy_directory(sftp_p=sftp, local_dir_p=os.path.expanduser(Config.LOCAL_DATASET_PATH.value), remote_dir_p=os.path.expanduser(Config.REMOTE_DATASET_PATH.value))            
+            self.copy_directory(sftp_p=sftp, local_dir_p=os.path.expanduser(Config.LOCAL_DATASET_PATH.value), remote_dir_p=Config.REMOTE_DATASET_PATH.value)            
 
         except Exception as e:
             print(Fore.RED + f"An error occurred during connection: {e}")
@@ -140,16 +137,22 @@ class MasterMonitoring:
         exp_duration = arg_p[1]
         exp_step = arg_p[2]
         exp_path = arg_p[3]
+        
         if exp_path == '':
             exp_path = os.getcwd()
-        # if Config.USE_REMOTE.value:
-            # self.lock_barrier.wait()
+        
         if Config.LOCAL_MONITORING_DIR.value:
-            result = subprocess.run(["python3", f"{Config.LOCAL_MONITORING_DIR.value}/meta_monitoring.py", f"{exp_name}", f"{exp_duration}", f"{exp_step}", "-monitoring_script", f"{exp_path}", "-database_path", f"{Config.LOCAL_DATASET_PATH.value}",  "-process_number", f"{Config.PROCESS_PER_ROBOTS.value}"], cwd=os.path.expanduser('~'), capture_output=True, text=True)
+            if self.zenoh:
+                result = subprocess.run(["python3", f"{Config.LOCAL_MONITORING_DIR.value}/meta_monitoring.py", f"{exp_name}", f"{exp_duration}", f"{exp_step}", "-z", "-monitoring_script", f"{exp_path}", "-database_path", f"{Config.LOCAL_DATASET_PATH.value}", "-packet_size", f"{Config.PACKET_SIZE.value}", "-ros_ws_path", f"{Config.MASTER_ROS_WS_PATH.value}", "-ros_distro", f"{Config.MASTER_ROS_DISTRO.value}"], cwd=os.path.expanduser('~'), capture_output=True, text=True)
+            else:
+                result = subprocess.run(["python3", f"{Config.LOCAL_MONITORING_DIR.value}/meta_monitoring.py", f"{exp_name}", f"{exp_duration}", f"{exp_step}", "-monitoring_script", f"{exp_path}", "-database_path", f"{Config.LOCAL_DATASET_PATH.value}", "-packet_size", f"{Config.PACKET_SIZE.value}", "-ros_ws_path", f"{Config.MASTER_ROS_WS_PATH.value}", "-ros_distro", f"{Config.MASTER_ROS_DISTRO.value}"], cwd=os.path.expanduser('~'), capture_output=True, text=True)
+        
         else:
             current_directory = os.getcwd()
-            result = subprocess.run(["python3", f"{current_directory}/meta_monitoring.py", f"{exp_name}", f"{exp_duration}", f"{exp_step}", "-monitoring_script", f"{exp_path}", "-database_path", f"{Config.LOCAL_DATASET_PATH.value}", "-process_number", f"{Config.PROCESS_PER_ROBOTS.value}"], cwd=os.path.expanduser('~'), capture_output=True, text=True)
-
+            if self.zenoh:
+                result = subprocess.run(["python3", f"{current_directory}/meta_monitoring.py", f"{exp_name}", f"{exp_duration}", f"{exp_step}", "-z", "-monitoring_script", f"{exp_path}", "-database_path", f"{Config.LOCAL_DATASET_PATH.value}", "-packet_size", f"{Config.PACKET_SIZE.value}", "-ros_ws_path", f"{Config.MASTER_ROS_WS_PATH.value}", "-ros_distro", f"{Config.MASTER_ROS_DISTRO.value}"], cwd=os.path.expanduser('~'), capture_output=True, text=True)
+            else:
+                result = subprocess.run(["python3", f"{current_directory}/meta_monitoring.py", f"{exp_name}", f"{exp_duration}", f"{exp_step}", "-monitoring_script", f"{exp_path}", "-database_path", f"{Config.LOCAL_DATASET_PATH.value}", "-packet_size", f"{Config.PACKET_SIZE.value}", "-ros_ws_path", f"{Config.MASTER_ROS_WS_PATH.value}", "-ros_distro", f"{Config.MASTER_ROS_DISTRO.value}"], cwd=os.path.expanduser('~'), capture_output=True, text=True)
 
         print(Fore.LIGHTYELLOW_EX + "\n\n\n\n=================================")
         print(Style.RESET_ALL)
@@ -176,19 +179,20 @@ class MasterMonitoring:
         """
         sftp = sftp_p
         local_directory = local_dir_p
-        # remote_directory = remote_dir_p
-        remote_directory = "/home/xavier/dataset" # HARDCODED LIME, NEED TO BE MODIFIED
+        remote_directory = remote_dir_p
         file_count = file_count_p
         error=False
 
+
         # Create the local directory for the database if it doesn't exist
-        os.makedirs(Config.REMOTE_DATASET_PATH.value, exist_ok=True)
+        os.makedirs(local_directory, exist_ok=True)
         
         for item in sftp.listdir_attr(remote_directory):
             remote_item_path = remote_directory + "/" + item.filename
             local_item_path = os.path.join(local_directory, item.filename)
 
             if item.st_mode & 0o4000:  # Check if it's a directory
+                
                 os.makedirs(local_item_path, exist_ok=True)
                 self.copy_directory(sftp_p=sftp, local_dir_p=local_item_path, remote_dir_p=remote_item_path, file_count_p=file_count)
 
