@@ -4,18 +4,18 @@ from enum import Enum
 class Config(Enum):  
     # Leo02
     LEO02_NAME = "leo02"
-    LEO02_HOST = "192.168.44.123"
-    LEO02_USERNAME = "xavier"
-    LEO02_PASSWORD = "xavier"
+    LEO02_HOST = ""
+    LEO02_USERNAME = ""
+    LEO02_PASSWORD = ""
     LEO02_ROS_WS_PATH = "/home/xavier/ros2_ws"
     LEO02_ROS_DISTRO = "foxy"
 
 
     # Leo03
     LEO03_NAME = "leo03"
-    LEO03_HOST = "192.168.44.133"
-    LEO03_USERNAME = "xavier"
-    LEO03_PASSWORD = "xavier"
+    LEO03_HOST = ""
+    LEO03_USERNAME = ""
+    LEO03_PASSWORD = ""
     LEO03_ROS_WS_PATH = "/home/xavier/ros2_ws"
     LEO03_ROS_DISTRO = "foxy"
 
