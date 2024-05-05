@@ -3,7 +3,7 @@ import csv
 import os
 import time
 import argparse
-
+from NMEA0183 import NMEA0183
 
 class Monitoring:
 
@@ -20,12 +20,30 @@ class Monitoring:
         self.data = []
         self.old_network_data = None
         self.new_network_data = None
+        self.gps_data = []
+
+
+        # GPS
+        self.serial_location = '/dev/ttyUSB0'
+        self.serial_baudrate = 4800
+        self.serial_timeout = 5
+
+        #Provides the required serial device info
+        self.nmea = NMEA0183(self.serial_location,self.serial_baudrate,self.serial_timeout)
+
+        #Starts the serial connection
+        self.nmea.start()
+
+
         if database_path_p == None or database_path_p == '':
             self.path = os.getcwd()+"/dataset"
         else:
             self.path = os.path.expanduser(database_path_p)
         self.create_csv(self.experiment_name)
         self.get_data()
+        
+        #Quit the NMEA connection
+        self.nmea.quit()
         exit()
 
 
@@ -141,6 +159,40 @@ class Monitoring:
         return network_result
 
 
+    def get_gps_data(self):
+        """
+        Get GPS data and store them in a list
+        """
+        if self.nmea.exit == False:
+            print('Connection!')
+
+            #GPS data
+            self.gps_data = []
+            print(self.nmea.data_gps['lat'])
+            self.gps_data.append(self.nmea.data_gps['lat'])
+
+            print(self.nmea.data_gps['lon'])
+            self.gps_data.append(self.nmea.data_gps['lon'])
+
+            print(self.nmea.data_gps['speed'])
+            self.gps_data.append(self.nmea.data_gps['speed'])
+
+            print(self.nmea.data_gps['track'])
+            self.gps_data.append(self.nmea.data_gps['track'])
+
+            print(self.nmea.data_gps['utc'])
+            self.gps_data.append(self.nmea.data_gps['utc'])
+
+            print(self.nmea.data_gps['status'])
+            self.gps_data.append(self.nmea.data_gps['status'])
+            return self.gps_data
+
+        else:
+            print('No connection!')
+        
+
+
+
     def get_data(self):
         """
         Get the measurement
@@ -152,7 +204,12 @@ class Monitoring:
             network_result = self.network_measure()
             cpu_results = self.cpu_measure()
             ram_results = self.ram_measure()
+            gps_data = self.get_gps_data()
+            
+            #Timestamp
             self.data.append(int(round(time.time() * 1000)) - self.starting_time)
+            
+            #Network
             self.data.append(network_result[0])
             self.data.append(network_result[1])
             self.data.append(network_result[2])
@@ -161,11 +218,22 @@ class Monitoring:
             self.data.append(network_result[5])
             self.data.append(network_result[6])
             self.data.append(network_result[7])
+            
+            #CPU
             self.data.append(cpu_results[0])
             self.data.append(cpu_results[1])            
+            
+            #RAM
             self.data.append(ram_results[0])
             self.data.append(ram_results[1])
 
+            #GPS
+            self.data.append(gps_data[0])
+            self.data.append(gps_data[1])
+            self.data.append(gps_data[2])
+            self.data.append(gps_data[3])
+            self.data.append(gps_data[4])
+            self.data.append(gps_data[5])
             
             self.write_csv()
             
