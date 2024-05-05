@@ -67,11 +67,39 @@ class Monitoring:
 
     def cpu_measure(self):
         """
-        Measure the cpu usage (percentage)
+        Measure the cpu usage (percentage) of ROS 2 node
         """
-        cpu_usage = psutil.cpu_percent(interval=self.experiment_timestep)
-        return cpu_usage
+        processes = []
+        for proc in psutil.process_iter():
+            if proc.name() == "ros2":
+                processes.append(proc)
+    
+        cpu_percent = 0
+        cpu_time = 0
         
+        for proc in processes:
+            cpu_percent += proc.cpu_percent(interval=0.2)
+            cpu_time += sum(proc.cpu_times()[:2])
+        return cpu_percent, cpu_time
+        
+
+    def ram_measure(self):
+        """
+        Measure the ram usage () of ROS 2 node
+        """
+        processes = []
+        for proc in psutil.process_iter():
+            if proc.name() == "ros2":
+                processes.append(proc)
+        
+        ram_percent = 0
+        ram_info = 0
+
+        for proc in processes:
+            ram_percent += proc.memory_percent()
+            ram_info += proc.memory_info()[0]        
+        return ram_percent, ram_info
+
 
     def network_measure(self):
         """
@@ -122,6 +150,8 @@ class Monitoring:
         while not stop:
             self.data = []
             network_result = self.network_measure()
+            cpu_results = self.cpu_measure()
+            ram_results = self.ram_measure()
             self.data.append(int(round(time.time() * 1000)) - self.starting_time)
             self.data.append(network_result[0])
             self.data.append(network_result[1])
@@ -131,7 +161,11 @@ class Monitoring:
             self.data.append(network_result[5])
             self.data.append(network_result[6])
             self.data.append(network_result[7])
-            self.data.append(self.cpu_measure())
+            self.data.append(cpu_results[0])
+            self.data.append(cpu_results[1])            
+            self.data.append(ram_results[0])
+            self.data.append(ram_results[1])
+
             
             self.write_csv()
             
