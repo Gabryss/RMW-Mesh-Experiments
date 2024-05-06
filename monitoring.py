@@ -25,8 +25,8 @@ class Monitoring:
 
 
         # GPS
-        self.serial_location = '/dev/ttyUSB0'
-        self.serial_baudrate = 4800
+        self.serial_location = '/dev/gps'
+        self.serial_baudrate = 9600
         self.serial_timeout = 5
 
         #Provides the required serial device info
