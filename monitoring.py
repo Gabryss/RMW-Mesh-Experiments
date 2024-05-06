@@ -21,7 +21,7 @@ class Monitoring:
         self.data = []
         self.old_network_data = None
         self.new_network_data = None
-        self.gps_data = []
+        self.gps_data = [0.0, 0.0, 0.0]
 
 
         # GPS
@@ -164,19 +164,23 @@ class Monitoring:
         # Open the serial port
         ser = serial.Serial(self.serial_location, self.serial_baudrate)
         try:
-            # print("Waiting for GPS data...")
-            line = ser.readline().decode().strip()
-            print('Connection!')
-            if line.startswith("$GPGGA"):
-                data = line.split(',')
-                self.get_data['lat'] = float(data[2])/100
-                self.get_data['lon'] = float(data[4])/100
-                self.get_data['alt'] = float(data[9])/100
+            received_data = False
+            while received_data == False:
+                # print("Waiting for GPS data...")
+                line = ser.readline().decode().strip()
+                if line.startswith("$GPGGA"):
+                    received_data = True
+                    data = line.split(',')
+                    self.gps_data[0] = float(data[2])/100
+                    self.gps_data[1] = float(data[4])/100
+                    self.gps_data[2] = float(data[9])/100            
             return self.gps_data
+        
         except Exception as e:
-            print("No Connection:", e)
+            print("No Serial connection:", e)
+        
         finally:
-            ser.close()        
+            ser.close()
 
 
 
