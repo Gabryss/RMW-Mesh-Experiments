@@ -1,7 +1,12 @@
 from enum import Enum
 
 
-class Config(Enum):  
+class Config(Enum):
+
+
+    # Target
+    TARGET = "leo06"
+
     # Leo02
     LEO02_NAME = "leo02"
     LEO02_HOST = ""

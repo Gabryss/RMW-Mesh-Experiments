@@ -47,8 +47,8 @@ class MetaMonitoring:
         self.processes = []
         self.create_process(self.global_monitoring)
 
-        if self.is_robot:
-            arguments = [self.robot_name]           
+        if self.is_robot and self.is_target:
+            arguments = [self.robot_name]  
             if self.zenoh:
                 zenoh_process = mp.Process(target=self.zenoh_bridge, args=['2'])
                 zenoh_process.daemon = True                                         # Tell the script to continue without waiting for zenoh result
@@ -57,8 +57,8 @@ class MetaMonitoring:
 
             self.create_process(self.byte_sender, arguments[0])
 
-        else:
-            arguments = ['leo02']
+        elif not self.is_robot:
+            arguments = ['leo02'] # replace with target
             if self.zenoh:
                 zenoh_process = mp.Process(target=self.zenoh_bridge, args=['2'])
                 zenoh_process.daemon = True                                         # Tell the script to continue without waiting for zenoh result
