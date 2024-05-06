@@ -3,7 +3,8 @@ import csv
 import os
 import time
 import argparse
-from NMEA0183 import NMEA0183
+import serial
+
 
 class Monitoring:
 
@@ -29,10 +30,8 @@ class Monitoring:
         self.serial_timeout = 5
 
         #Provides the required serial device info
-        self.nmea = NMEA0183(self.serial_location,self.serial_baudrate,self.serial_timeout)
 
         #Starts the serial connection
-        self.nmea.start()
 
 
         if database_path_p == None or database_path_p == '':
@@ -43,7 +42,6 @@ class Monitoring:
         self.get_data()
         
         #Quit the NMEA connection
-        self.nmea.quit()
         exit()
 
 
@@ -163,33 +161,22 @@ class Monitoring:
         """
         Get GPS data and store them in a list
         """
-        if self.nmea.exit == False:
+        # Open the serial port
+        ser = serial.Serial(self.serial_location, self.serial_baudrate)
+        try:
+            # print("Waiting for GPS data...")
+            line = ser.readline().decode().strip()
             print('Connection!')
-
-            #GPS data
-            self.gps_data = []
-            print(self.nmea.data_gps['lat'])
-            self.gps_data.append(self.nmea.data_gps['lat'])
-
-            print(self.nmea.data_gps['lon'])
-            self.gps_data.append(self.nmea.data_gps['lon'])
-
-            print(self.nmea.data_gps['speed'])
-            self.gps_data.append(self.nmea.data_gps['speed'])
-
-            print(self.nmea.data_gps['track'])
-            self.gps_data.append(self.nmea.data_gps['track'])
-
-            print(self.nmea.data_gps['utc'])
-            self.gps_data.append(self.nmea.data_gps['utc'])
-
-            print(self.nmea.data_gps['status'])
-            self.gps_data.append(self.nmea.data_gps['status'])
+            if line.startswith("$GPGGA"):
+                data = line.split(',')
+                self.get_data['lat'] = float(data[2])/100
+                self.get_data['lon'] = float(data[4])/100
+                self.get_data['alt'] = float(data[9])/100
             return self.gps_data
-
-        else:
-            print('No connection!')
-        
+        except Exception as e:
+            print("No Connection:", e)
+        finally:
+            ser.close()        
 
 
 
@@ -228,12 +215,13 @@ class Monitoring:
             self.data.append(ram_results[1])
 
             #GPS
-            self.data.append(gps_data[0])
-            self.data.append(gps_data[1])
-            self.data.append(gps_data[2])
-            self.data.append(gps_data[3])
-            self.data.append(gps_data[4])
-            self.data.append(gps_data[5])
+            if gps_data:
+                self.data.append(gps_data[0])
+                self.data.append(gps_data[1])
+                self.data.append(gps_data[2])
+                self.data.append(gps_data[3])
+                self.data.append(gps_data[4])
+                self.data.append(gps_data[5])
             
             self.write_csv()
             
