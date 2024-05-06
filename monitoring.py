@@ -219,9 +219,6 @@ class Monitoring:
                 self.data.append(gps_data[0])
                 self.data.append(gps_data[1])
                 self.data.append(gps_data[2])
-                self.data.append(gps_data[3])
-                self.data.append(gps_data[4])
-                self.data.append(gps_data[5])
             
             self.write_csv()
             
