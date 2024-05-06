@@ -61,7 +61,7 @@ class Monitoring:
         self.check_dataset_directory()
         with open(f"{self.path}/{experiment_name_p}.csv", 'w', newline='') as file:
             writer = csv.writer(file)
-            writer.writerow(["Timestamp", "Bytes_Send", "Bytes_Received", "Packets_Send", "Packets_Received", "Errors_Send", "Errors_Received", "Drop_Incoming", "Drop_total", "CPU_Usage"])
+            writer.writerow(["Timestamp", "Bytes_Send", "Bytes_Received", "Packets_Send", "Packets_Received", "Errors_Send", "Errors_Received", "Drop_Incoming", "Drop_total", "CPU_percent", "CPU_time", , "RAM_percent", "RAM_info", "LAT", "LONG", "ALT"])
 
 
     def write_csv(self, force_p=False):
