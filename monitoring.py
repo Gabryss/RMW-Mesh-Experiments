@@ -168,12 +168,15 @@ class Monitoring:
             while received_data == False:
                 # print("Waiting for GPS data...")
                 line = ser.readline().decode().strip()
-                if line.startswith("$GPGGA"):
+                if line.startswith("$GPGGA"): #GPS related data
                     received_data = True
                     data = line.split(',')
-                    self.gps_data[0] = float(data[2])/100
-                    self.gps_data[1] = float(data[4])/100
-                    self.gps_data[2] = float(data[9])/100            
+                    if len(data) > 9 and data[2] and data[4] and data[9]:
+                        self.gps_data[0] = self.nmea_to_decimal_degrees(data[2], data[3])
+                        self.gps_data[1] = self.nmea_to_decimal_degrees(data[4], data[5])
+                        self.gps_data[2] = float(data[9])  # Altitude is directly in meters      
+                    else:
+                        print("Incomplete GPS data received.")
             return self.gps_data
         
         except Exception as e:
@@ -182,6 +185,15 @@ class Monitoring:
         finally:
             ser.close()
 
+
+    # Function to convert NMEA coordinates to decimal degrees
+    def nmea_to_decimal_degrees(self, coordinate, direction):
+        degrees = int(float(coordinate) / 100)
+        minutes = float(coordinate) - degrees * 100
+        decimal_degrees = degrees + minutes / 60
+        if direction in ['S', 'W']:
+            decimal_degrees *= -1
+        return decimal_degrees
 
 
     def get_data(self):
