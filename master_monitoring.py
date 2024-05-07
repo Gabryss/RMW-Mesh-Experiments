@@ -14,6 +14,8 @@ class MasterMonitoring:
         self.username_list = Config.ROBOTS_USERNAME_LIST.value
         self.password_list = Config.ROBOTS_PASSWORD_LIST.value
         self.robot_name_list = Config.ROBOTS_NAME_LIST.value
+        self.ros_ws_path_list = Config.ROBOTS_ROS_WS_PATH_LIST.value
+        self.ros_distro_list = Config.ROBOTS_ROS_DISTRO_LIST.value
         self.zenoh = Config.ZENOH.value
         if Config.LOCAL_DATASET_PATH.value == '' or Config.LOCAL_DATASET_PATH.value == None:
             self.local_dataset_path = os.getcwd()
@@ -37,7 +39,7 @@ class MasterMonitoring:
         # Remote robots
         if Config.USE_REMOTE.value:
             for thread_index in range(self.nb_connection):
-                thread = threading.Thread(target=self.run_remote_script, args=self.arguments+[self.robot_name_list[thread_index], Config.REMOTE_MONITORING_DIR.value, Config.REMOTE_DATASET_PATH.value, self.host_list[thread_index], self.username_list[thread_index], self.password_list[thread_index]])
+                thread = threading.Thread(target=self.run_remote_script, args=self.arguments+[self.robot_name_list[thread_index], Config.REMOTE_MONITORING_DIR.value, Config.REMOTE_DATASET_PATH.value, self.host_list[thread_index], self.username_list[thread_index], self.password_list[thread_index],self.ros_ws_path_list[thread_index], self.ros_distro_list[thread_index]])
                 thread.start()
                 self.threads.append(thread)
 
@@ -71,6 +73,8 @@ class MasterMonitoring:
         host = str(args_p[6])
         username = str(args_p[7])
         password = str(args_p[8])
+        ros_ws_path = str(args_p[9])
+        ros_distro = str(args_p[10])
 
 
         if database_path == '' or database_path == None:
@@ -83,9 +87,9 @@ class MasterMonitoring:
             ssh.connect(host, username=username, password=password)
 
             if self.zenoh:
-                stdin, stdout, stderr = ssh.exec_command(f"source /opt/ros/foxy/setup.bash && export ROS_DOMAIN_ID=1 && python3 {remote_dir_path}/meta_monitoring.py {name} {duration} {step} -r -z -target {target_name} -monitoring_script_path {remote_dir_path} -database_path {database_path} -packet_size {Config.PACKET_SIZE.value} -ros_ws_path {Config.LEO02_ROS_WS_PATH.value} -ros_distro {Config.LEO02_ROS_DISTRO.value}")
+                stdin, stdout, stderr = ssh.exec_command(f"source /opt/ros/iron/setup.bash && export ROS_DOMAIN_ID=1 && python3 {remote_dir_path}/meta_monitoring.py {name} {duration} {step} -r -z -target {target_name} -monitoring_script_path {remote_dir_path} -database_path {database_path} -packet_size {Config.PACKET_SIZE.value} -ros_ws_path {ros_ws_path} -ros_distro {ros_distro} -target {Config.TARGET.value}")
             else:
-                stdin, stdout, stderr = ssh.exec_command(f"source /opt/ros/foxy/setup.bash && export ROS_DOMAIN_ID=1 && python3 {remote_dir_path}/meta_monitoring.py {name} {duration} {step} -r -target {target_name} -monitoring_script_path {remote_dir_path} -database_path {database_path} -packet_size {Config.PACKET_SIZE.value} -ros_ws_path {Config.LEO02_ROS_WS_PATH.value} -ros_distro {Config.LEO02_ROS_DISTRO.value}")
+                stdin, stdout, stderr = ssh.exec_command(f"source /opt/ros/iron/setup.bash && export ROS_DOMAIN_ID=1 && python3 {remote_dir_path}/meta_monitoring.py {name} {duration} {step} -r -target {target_name} -monitoring_script_path {remote_dir_path} -database_path {database_path} -packet_size {Config.PACKET_SIZE.value} -ros_ws_path {ros_ws_path} -ros_distro {ros_distro} -target {Config.TARGET.value}")
 
             # Wait for script execution to complete
             exit_status = stdout.channel.recv_exit_status()

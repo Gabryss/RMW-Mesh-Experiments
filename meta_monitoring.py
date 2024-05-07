@@ -7,7 +7,7 @@ from colorama import Fore, Style
 
 class MetaMonitoring:
 
-    def __init__(self, experiment_name_p, experiment_duration_p=30, experiment_timestep_p=0.1, is_robot_p=False, use_zenoh_p=False, robot_name_p="leo02", ros_distro_p="humble", ros_ws_path_p="/home/gabriel/ros2_ws", monitoring_path_p="", database_path_p="", packet_size_p=None) -> None:
+    def __init__(self, experiment_name_p, experiment_duration_p=30, experiment_timestep_p=0.1, is_robot_p=False, use_zenoh_p=False, robot_name_p="leo02", ros_distro_p="humble", ros_ws_path_p="/home/gabriel/ros2_ws", monitoring_path_p="", database_path_p="", packet_size_p=None, target="") -> None:
         if monitoring_path_p == None:
             self.monitoring_path = os.getcwd()
         else:
@@ -20,6 +20,7 @@ class MetaMonitoring:
         
         self.is_robot = is_robot_p
         self.robot_name = robot_name_p
+        self.is_target = (target == self.robot_name)
         if self.is_robot:
             self.experiment_name = experiment_name_p + f"_{self.robot_name}"
         else:
@@ -50,7 +51,7 @@ class MetaMonitoring:
         if self.is_robot and self.is_target:
             arguments = [self.robot_name]  
             if self.zenoh:
-                zenoh_process = mp.Process(target=self.zenoh_bridge, args=['2'])
+                zenoh_process = mp.Process(target=self.zenoh_router, args=['2'])
                 zenoh_process.daemon = True                                         # Tell the script to continue without waiting for zenoh result
                 zenoh_process.start()
 
@@ -60,7 +61,7 @@ class MetaMonitoring:
         elif not self.is_robot:
             arguments = ['leo02'] # replace with target
             if self.zenoh:
-                zenoh_process = mp.Process(target=self.zenoh_bridge, args=['2'])
+                zenoh_process = mp.Process(target=self.zenoh_router, args=['2'])
                 zenoh_process.daemon = True                                         # Tell the script to continue without waiting for zenoh result
                 zenoh_process.start()
 
@@ -98,6 +99,17 @@ class MetaMonitoring:
             print(f"Command '{e.cmd}' returned non-zero exit status {e.returncode}.")
         self.queue.put(result)
 
+    def zenoh_router(self, *router_id_p):
+        """
+        Activate zenoh router
+        """
+        router_id = ''.join(router_id_p)
+        cmd = f"source $HOME/zenoh_ws/install/setup.bash && export ZENOH_ROUTER_CONFIG_URI=~/zenoh_config.json5 && ros2 run rmw_zenoh_cpp rmw_zenohd"
+        try:
+            result = subprocess.run(cmd, capture_output=True, text=True, shell=True)
+        except subprocess.CalledProcessError as e:
+            print(f"Command '{e.cmd}' returned non-zero exit status {e.returncode}.")
+        self.queue.put(result)
 
     def global_monitoring(self):
         result = subprocess.run(["python3", f"{self.monitoring_path}/monitoring.py", f"{self.experiment_name}", f"{self.experiment_duration}", f"{self.experiment_timestep}", "-database_path", f"{self.database_path}"], cwd=os.path.expanduser('~'), capture_output=True, text=True)
