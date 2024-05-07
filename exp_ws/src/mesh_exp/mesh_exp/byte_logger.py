@@ -8,7 +8,9 @@ import time
 
 
 class ByteLogger(Node):
- 
+    """
+    Only log data if a message is received
+    """
     def __init__(self):
         super().__init__('minimal_subscriber')
 
@@ -28,11 +30,11 @@ class ByteLogger(Node):
             self.listener_callback,
             10)
         # prevent warning that self.my_subscriber is not used
-
-
         self.my_subscriber
-        self.path = os.path.expanduser('~/dataset')
+
+        self.path = os.path.expanduser('~/mesh_exp/dataset')
         self.create_csv()
+
     def check_dataset_directory(self):
         """
         Check if the dataset directory exist
@@ -42,9 +44,11 @@ class ByteLogger(Node):
         if not os.path.exists(self.path):
             os.makedirs(self.path)
 
+
     def stop_callback(self):
         self.get_logger().info('Experiment time over, shutting down...')
         self.should_continue = False
+
 
     def create_csv(self):
         """
@@ -54,6 +58,7 @@ class ByteLogger(Node):
         with open(f"{self.path}/{self.experiment_name}.csv", 'w', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(['TimeStamp', 'Delay', 'Size'])
+
 
     def write_csv(self,data, force_p=False):
         """
@@ -72,8 +77,11 @@ class ByteLogger(Node):
         else:
             raise Exception('The csv file was not created, please create it first')
 
-    def listener_callback(self, msg):
 
+    def listener_callback(self, msg):
+        """
+        Every time a message is received, fill the CSV file with it
+        """
         now = self.get_clock().now()
         current_time_float = now.nanoseconds * 1e-9
         print(f"Current time: {current_time_float}")
@@ -96,10 +104,10 @@ def main(args=None):
     while rclpy.ok() and my_simple_subscriber.should_continue:
         rclpy.spin_once(my_simple_subscriber)
 
- 
-     # destroy the node when it is not used anymore
+    # destroy the node when it is not used anymore
     my_simple_subscriber.destroy_node()
     rclpy.shutdown()
- 
+
+
 if __name__ == '__main__':
     main()
