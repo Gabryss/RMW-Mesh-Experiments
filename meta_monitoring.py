@@ -3,6 +3,7 @@ import multiprocessing as mp
 import os
 import argparse
 from colorama import Fore, Style
+from config import Config
 
 
 class MetaMonitoring:
@@ -59,7 +60,7 @@ class MetaMonitoring:
             self.create_process(self.byte_sender, arguments[0])
 
         elif not self.is_robot:
-            arguments = ['leo02'] # replace with target
+            arguments = [Config.TARGET.value] # replace with target
             if self.zenoh:
                 zenoh_process = mp.Process(target=self.zenoh_router, args=['2'])
                 zenoh_process.daemon = True                                         # Tell the script to continue without waiting for zenoh result
@@ -99,6 +100,7 @@ class MetaMonitoring:
             print(f"Command '{e.cmd}' returned non-zero exit status {e.returncode}.")
         self.queue.put(result)
 
+
     def zenoh_router(self, *router_id_p):
         """
         Activate zenoh router
@@ -110,6 +112,7 @@ class MetaMonitoring:
         except subprocess.CalledProcessError as e:
             print(f"Command '{e.cmd}' returned non-zero exit status {e.returncode}.")
         self.queue.put(result)
+
 
     def global_monitoring(self):
         result = subprocess.run(["python3", f"{self.monitoring_path}/monitoring.py", f"{self.experiment_name}", f"{self.experiment_duration}", f"{self.experiment_timestep}", "-database_path", f"{self.database_path}"], cwd=os.path.expanduser('~'), capture_output=True, text=True)
