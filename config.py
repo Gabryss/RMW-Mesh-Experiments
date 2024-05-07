@@ -12,7 +12,7 @@ class Config(Enum):
     LEOA_NAME = "leo06"
     LEOA_HOST = "10.0.0.1"
     LEOA_USERNAME = "pi"
-    LEOA_PASSWORD = "password"
+    LEOA_PASSWORD = "raspberry"
     LEOA_ROS_WS_PATH = "/home/pi/mesh_exp/remote_monitoring/exp_ws"
     LEOA_ROS_DISTRO = "iron"
 
