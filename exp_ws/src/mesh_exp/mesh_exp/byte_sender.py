@@ -1,5 +1,6 @@
 import rclpy
 from rclpy.node import Node
+from geometry_msgs.msg import Twist
 from mesh_interfaces.msg import FixedData
 import time
 
@@ -29,7 +30,7 @@ class NetworkTestPublisher(Node):
     def __init__(self):
         super().__init__('network_test_publisher')
 
-        self.declare_parameter('robot_name', 'leo02')
+        self.declare_parameter('robot_name', 'leo06')
         self.robot_name =  self.get_parameter('robot_name').get_parameter_value().string_value + '/'
         self.declare_parameter('size', 'KILO')
         self.data_size =  self.get_parameter('size').get_parameter_value().string_value
@@ -42,16 +43,27 @@ class NetworkTestPublisher(Node):
 
         self.stop_timer = self.create_timer(self.exp_time, self.stop_callback)
 
+        # Velocity publisher
+        self.cmd_publisher_ = self.create_publisher(Twist, self.robot_name + 'cmd_vel', 10)
+
+
     def stop_callback(self):
         self.get_logger().info('Experiment time over, shutting down...')
         self.should_continue = False
 
+
     def timer_callback(self):
+        # Send data
         msg = FixedData()
         self.get_logger().info('Publishing a message of size %s bytes' % self.data_size)
         msg.data = 'a' * (self.get_global_var(self.data_size) -8)  # create a string of the desired size minus the size of the header
         msg.millisec = int(round(time.time() * 1000))
         self.publisher_.publish(msg)
+
+        # Send velocity commands
+        twist = Twist()
+        twist.linear.x = 0.5
+        self.cmd_publisher_.publish(twist)
         
 
     def get_global_var(self,name):

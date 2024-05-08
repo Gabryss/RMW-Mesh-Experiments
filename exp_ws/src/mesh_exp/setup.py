@@ -20,8 +20,6 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'pc_data = mesh_exp.pc_data:main',
-            'pc_logger = mesh_exp.pc_logger:main',
             'byte_sender = mesh_exp.byte_sender:main',
             'byte_logger = mesh_exp.byte_logger:main',
         ],
