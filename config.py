@@ -49,9 +49,11 @@ class Config(Enum):
     # Zenoh
     ZENOH = False
     # DDS
-    #RMW_IMPLEMENTATION = "rmw_fastrtps_cpp"
-    #RMW_IMPLEMENTATION = "rmw_cyclonedds_cpp"
-    RMW_IMPLEMENTATION = "rmw_zenoh_cpp"
+    #DDS = "fastrtps"
+    DDS = "cyclonedds"
+    # DDS = "zenoh"
+
+    RMW_IMPLEMENTATION = f"rmw_{DDS}_cpp"
     # ROS_DOMAIN_ID
 
     ROBOTS_NAME_LIST = [LEOA_NAME, LEOB_NAME]
@@ -68,8 +70,8 @@ class Config(Enum):
     # ROBOTS_ROS_DISTRO_LIST = [LEOA_ROS_DISTRO]
 
 
-    EXPERIMENT_NAME = "zenoh_test_5"
-    EXPERIMENT_TIME = 10            # In seconds
+    EXPERIMENT_NAME = f"{DDS}_test_7"
+    EXPERIMENT_TIME = 60            # In seconds
     EXPERIMENT_TIMESTEP = 0.1       # Step between each measurement (in seconds)
     PACKET_SIZE = "KILO32"            # Packet size (string)
                                     #KILO = 1024, KILO2 = 2048, KILO4 = 4096, KILO8 = 8192, KILO16 = 16384 KILO32 = 32768
