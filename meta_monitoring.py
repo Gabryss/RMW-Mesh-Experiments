@@ -8,7 +8,7 @@ from config import Config
 
 class MetaMonitoring:
 
-    def __init__(self, experiment_name_p, experiment_duration_p=30, experiment_timestep_p=0.1, is_robot_p=False, use_zenoh_p=False, robot_name_p="leo02", ros_distro_p="humble", ros_ws_path_p="/home/gabriel/ros2_ws", monitoring_path_p="", database_path_p="", packet_size_p=None, target="") -> None:
+    def __init__(self, experiment_name_p, experiment_duration_p=30, experiment_timestep_p=0.1, is_robot_p=False, use_zenoh_p=False, robot_name_p="bob", ros_distro_p="humble", ros_ws_path_p="/home/gabriel/ros2_ws", monitoring_path_p="", database_path_p="", packet_size_p=None, target_p="", rmw_implementation_p="rmw_fastrtp_cpp") -> None:
         if monitoring_path_p == None:
             self.monitoring_path = os.getcwd()
         else:
@@ -21,18 +21,23 @@ class MetaMonitoring:
         
         self.is_robot = is_robot_p
         self.robot_name = robot_name_p
-        self.is_target = (target == self.robot_name)
+        self.target_name = target_p
+        print(f"Target name {self.target_name}, my name {self.robot_name}")
+        self.is_target = (self.target_name == self.robot_name)
         if self.is_robot:
             self.experiment_name = experiment_name_p + f"_{self.robot_name}"
         else:
             self.experiment_name = experiment_name_p + "_local"
-        
-        self.zenoh = use_zenoh_p
+        self.zenoh = False
         self.ros_ws_path = ros_ws_path_p
         self.ros_distro = ros_distro_p
         self.packet_size = packet_size_p
         self.experiment_duration = experiment_duration_p
         self.experiment_timestep = experiment_timestep_p
+        self.rmw_implementation = rmw_implementation_p
+        if self.rmw_implementation == "rmw_zenoh_cpp":
+            self.zenoh = True
+        
         self.process_number = 0
         self.results = []
         self.queue = mp.Queue()
@@ -46,6 +51,8 @@ class MetaMonitoring:
         """
         Execute in parallel the monitoring 
         """
+
+        print(f"Execute called is robot {self.is_robot}, is_target {self.is_target}")
         self.processes = []
         self.create_process(self.global_monitoring)
 
@@ -106,7 +113,9 @@ class MetaMonitoring:
         Activate zenoh router
         """
         router_id = ''.join(router_id_p)
-        cmd = f"source $HOME/zenoh_ws/install/setup.bash && export ZENOH_ROUTER_CONFIG_URI=~/zenoh_config.json5 && ros2 run rmw_zenoh_cpp rmw_zenohd"
+        home = os.path.expanduser('~')
+        cmd = f"bash -c 'source /opt/ros/iron/setup.bash && source {home}/zenoh_ws/install/setup.bash && export ZENOH_ROUTER_CONFIG_URI={home}/mesh_exp/remote_monitoring/zenoh_config.json5 && ros2 run rmw_zenoh_cpp rmw_zenohd'"
+        print(f"Zenoh router command: {cmd}")
         try:
             result = subprocess.run(cmd, capture_output=True, text=True, shell=True)
         except subprocess.CalledProcessError as e:
@@ -124,11 +133,12 @@ class MetaMonitoring:
             name = ''.join(name_p)
         else:
             name = name_p
-
+        print(f"Byte sender called")
+        home = os.path.expanduser('~')
         if self.zenoh:
-            cmd = f"bash -c 'source /opt/ros/{self.ros_distro}/setup.bash && source {self.ros_ws_path}/install/setup.bash && ROS_DOMAIN_ID=2 && ros2 run mesh_exp byte_sender --ros-args -p robot_name:={name} -p size:={self.packet_size} -p exp_time:={int(self.experiment_duration)}'"
+            cmd = f"bash -c 'source {self.ros_ws_path}/install/setup.bash && source {home}/zenoh_ws/install/setup.bash && ROS_DOMAIN_ID=51 && ros2 run mesh_exp byte_sender --ros-args -p robot_name:={name} -p size:={self.packet_size} -p exp_time:={int(self.experiment_duration)}'"
         else:
-            cmd = f"bash -c 'source /opt/ros/{self.ros_distro}/setup.bash && source {self.ros_ws_path}/install/setup.bash && ROS_DOMAIN_ID=1 && ros2 run mesh_exp byte_sender --ros-args -p robot_name:={name} -p size:={self.packet_size} -p exp_time:={int(self.experiment_duration)}'"
+            cmd = f"bash -c 'source {self.ros_ws_path}/install/setup.bash && export CYCLONEDDS_URI=/home/pi/mesh_exp/remote_monitoring/cyclone_config.xml && ROS_DOMAIN_ID=51 && export RMW_IMPLEMENTATION={self.rmw_implementation} && ros2 run mesh_exp byte_sender --ros-args -p robot_name:={name} -p size:={self.packet_size} -p exp_time:={int(self.experiment_duration)}'"
 
         try:
             result = subprocess.run(cmd, capture_output=True, text=True, shell=True)
@@ -142,8 +152,11 @@ class MetaMonitoring:
             name = ''.join(name_p)
         else:
             name = name_p
-
-        cmd = f"bash -c 'source /opt/ros/{self.ros_distro}/setup.bash && source {self.ros_ws_path}/install/setup.bash && ROS_DOMAIN_ID=1 && ros2 run mesh_exp byte_logger --ros-args -p robot_name:={name} -p experiment_name:={self.experiment_name} -p exp_time:={int(self.experiment_duration)}'"
+        home = os.path.expanduser('~')
+        if self.zenoh:
+            cmd = f"bash -c 'source /opt/ros/{self.ros_distro}/setup.bash && source {self.ros_ws_path}/install/setup.bash && source {home}/zenoh_ws/install/setup.bash && export RMW_IMPLEMENTATION={self.rmw_implementation} && ROS_DOMAIN_ID=51 && ros2 run mesh_exp byte_logger --ros-args -p robot_name:={name} -p experiment_name:={self.experiment_name} -p exp_time:={int(self.experiment_duration)}'"
+        else:
+            cmd = f"bash -c 'source /opt/ros/{self.ros_distro}/setup.bash && source {self.ros_ws_path}/install/setup.bash && export CYCLONEDDS_URI={self.monitoring_path}/cyclone_config.xml && export RMW_IMPLEMENTATION={self.rmw_implementation} && ROS_DOMAIN_ID=51 && ros2 run mesh_exp byte_logger --ros-args -p robot_name:={name} -p experiment_name:={self.experiment_name} -p exp_time:={int(self.experiment_duration)}'"
         try:
             result = subprocess.run(cmd, capture_output=True, text=True, shell=True)
         except subprocess.CalledProcessError as e:
@@ -195,7 +208,9 @@ if __name__ == "__main__":
     parser.add_argument("duration", help="Experiment's duration", type=float)
     parser.add_argument("step", help="Experiment's timestep measure", type=float)
     parser.add_argument("-r", "--remote", action="store_true", help="If used, specify to the executed script that it is on a robot")
-    parser.add_argument("-z", "--zenoh", action="store_true", help="If used, use Zenoh")
+    parser.add_argument("-z",  "--zenoh", action="store_true", help="If used, use Zenoh")
+    parser.add_argument("--robot_name", help="Name of the robot", type=str)
+    parser.add_argument("--rmw_implementation", help="RMW implementation to use", type=str)
 
     parser.add_argument("-target", help="Name of the remote target device", type=str)
     parser.add_argument("-monitoring_script_path", help="Path of the monitoring script to run", type=str)
@@ -213,9 +228,11 @@ if __name__ == "__main__":
                                      experiment_timestep_p=config['step'],
                                      is_robot_p=config['remote'],
                                      use_zenoh_p=config['zenoh'],
-                                     robot_name_p=config['target'],
+                                     robot_name_p=config['robot_name'],
                                      monitoring_path_p=config['monitoring_script_path'],
                                      database_path_p=config['database_path'],
                                      packet_size_p=config['packet_size'],
                                      ros_ws_path_p=config['ros_ws_path'],
-                                     ros_distro_p=config['ros_distro'])
+                                     ros_distro_p=config['ros_distro'],
+                                     rmw_implementation_p=config['rmw_implementation'],
+                                     target_p=config['target'])
