@@ -5,22 +5,22 @@ class Config(Enum):
 
 
     # Target
-    TARGET = "leo06"
+    TARGET = "leo02"
 
 
     #LeoA
-    LEOA_NAME = "leo06"
-    LEOA_HOST = "10.0.0.1"
+    LEOA_NAME = "leo02"
+    LEOA_HOST = "192.168.44.122"
     LEOA_USERNAME = "pi"
     LEOA_PASSWORD = "raspberry"
     LEOA_ROS_WS_PATH = "/home/pi/mesh_exp/remote_monitoring/exp_ws"
     LEOA_ROS_DISTRO = "iron"
 
     #LeoB
-    LEOB_NAME = "leo07"
-    LEOB_HOST = ""
-    LEOB_USERNAME = ""
-    LEOB_PASSWORD = ""
+    LEOB_NAME = "leo03"
+    LEOB_HOST = "192.168.44.132"
+    LEOB_USERNAME = "pi"
+    LEOB_PASSWORD = "raspberry"
     LEOB_ROS_WS_PATH = "/home/pi/mesh_exp/remote_monitoring/exp_ws"
     LEOB_ROS_DISTRO = "iron"
 
@@ -43,12 +43,15 @@ class Config(Enum):
     # LEO03_ROS_DISTRO = "iron"
 
     # MASTER
-    MASTER_ROS_WS_PATH = "/home/gabriel/mesh_exp/remote_monitoring/exp_ws"
+    MASTER_ROS_WS_PATH = "/home/lchovet/mesh_exp/remote_monitoring/exp_ws"
     MASTER_ROS_DISTRO = "iron"
 
     # Zenoh
     ZENOH = False
     # DDS
+    #RMW_IMPLEMENTATION = "rmw_fastrtps_cpp"
+    #RMW_IMPLEMENTATION = "rmw_cyclonedds_cpp"
+    RMW_IMPLEMENTATION = "rmw_zenoh_cpp"
     # ROS_DOMAIN_ID
 
     ROBOTS_NAME_LIST = [LEOA_NAME, LEOB_NAME]
@@ -57,8 +60,15 @@ class Config(Enum):
     ROBOTS_PASSWORD_LIST = [LEOA_PASSWORD, LEOB_PASSWORD]
     ROBOTS_ROS_WS_PATH_LIST = [LEOA_ROS_WS_PATH, LEOB_ROS_WS_PATH]
     ROBOTS_ROS_DISTRO_LIST = [LEOA_ROS_DISTRO, LEOB_ROS_DISTRO]
+    # ROBOTS_NAME_LIST = [LEOA_NAME]
+    # ROBOTS_HOST_LIST = [LEOA_HOST]
+    # ROBOTS_USERNAME_LIST = [LEOA_USERNAME]
+    # ROBOTS_PASSWORD_LIST = [LEOA_PASSWORD]
+    # ROBOTS_ROS_WS_PATH_LIST = [LEOA_ROS_WS_PATH]
+    # ROBOTS_ROS_DISTRO_LIST = [LEOA_ROS_DISTRO]
 
-    EXPERIMENT_NAME = "fast_test"
+
+    EXPERIMENT_NAME = "zenoh_test_5"
     EXPERIMENT_TIME = 10            # In seconds
     EXPERIMENT_TIMESTEP = 0.1       # Step between each measurement (in seconds)
     PACKET_SIZE = "KILO32"            # Packet size (string)
