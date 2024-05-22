@@ -4,6 +4,7 @@ import os
 import time
 import argparse
 import serial
+import subprocess
 
 
 class Monitoring:
@@ -61,7 +62,7 @@ class Monitoring:
         self.check_dataset_directory()
         with open(f"{self.path}/{experiment_name_p}.csv", 'w', newline='') as file:
             writer = csv.writer(file)
-            writer.writerow(["Timestamp", "Bytes_Send", "Bytes_Received", "Packets_Send", "Packets_Received", "Errors_Send", "Errors_Received", "Drop_Incoming", "Drop_total", "CPU_percent", "CPU_time", "RAM_percent", "RAM_info", "LAT", "LONG", "ALT"])
+            writer.writerow(["Timestamp", "Bytes_Send", "Bytes_Received", "Packets_Send", "Packets_Received", "Errors_Send", "Errors_Received", "Drop_Incoming", "Drop_total", "CPU_percent", "CPU_time", "RAM_percent", "RAM_info", "Ping_target", "LAT", "LONG", "ALT"])
 
 
     def write_csv(self, force_p=False):
@@ -115,6 +116,17 @@ class Monitoring:
             ram_percent += proc.memory_percent()
             ram_info += proc.memory_info()[0]        
         return ram_percent, ram_info
+    
+
+    def ping(self, address_p):
+        """
+        Ping the desired address
+        """
+        res = subprocess.call(["ping", str(address_p), "-c1", "-W2", "-q"])
+        if res > 0:
+            return 0
+        else:
+            return 1
 
 
     def network_measure(self):
@@ -208,6 +220,7 @@ class Monitoring:
             cpu_results = self.cpu_measure()
             ram_results = self.ram_measure()
             gps_data = self.get_gps_data()
+            ping_target = self.ping("1.1.1.1")
             
             #Timestamp
             self.data.append(int(round(time.time() * 1000)) - self.starting_time)
@@ -229,6 +242,9 @@ class Monitoring:
             #RAM
             self.data.append(ram_results[0])
             self.data.append(ram_results[1])
+
+            #Ping
+            self.data.append(ping_target)
 
             #GPS
             if gps_data:

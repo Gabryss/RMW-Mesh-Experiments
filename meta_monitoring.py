@@ -8,7 +8,7 @@ from config import Config
 
 class MetaMonitoring:
 
-    def __init__(self, experiment_name_p, experiment_duration_p=30, experiment_timestep_p=0.1, is_robot_p=False, use_zenoh_p=False, robot_name_p="bob", ros_distro_p="humble", ros_ws_path_p="/home/gabriel/ros2_ws", monitoring_path_p="", database_path_p="", packet_size_p=None, target_p="", rmw_implementation_p="rmw_fastrtp_cpp") -> None:
+    def __init__(self, experiment_name_p, experiment_duration_p=30, experiment_timestep_p=0.1, is_robot_p=False, robot_name_p="bob", ros_distro_p="humble", ros_ws_path_p="/home/gabriel/ros2_ws", monitoring_path_p="", database_path_p="", packet_size_p=None, target_p="", rmw_implementation_p="rmw_fastrtp_cpp") -> None:
         if monitoring_path_p == None:
             self.monitoring_path = os.getcwd()
         else:
@@ -22,7 +22,7 @@ class MetaMonitoring:
         self.is_robot = is_robot_p
         self.robot_name = robot_name_p
         self.target_name = target_p
-        print(f"Target name {self.target_name}, my name {self.robot_name}")
+        print(Fore.CYAN + f"Target name {self.target_name}, my name {self.robot_name}" + Style.RESET_ALL)
         self.is_target = (self.target_name == self.robot_name)
         if self.is_robot:
             self.experiment_name = experiment_name_p + f"_{self.robot_name}"
@@ -52,7 +52,7 @@ class MetaMonitoring:
         Execute in parallel the monitoring 
         """
 
-        print(f"Execute called is robot {self.is_robot}, is_target {self.is_target}")
+        print(Fore.CYAN + f"Execute called is robot {self.is_robot}, is_target {self.is_target}" + Style.RESET_ALL)
         self.processes = []
         self.create_process(self.global_monitoring)
 
@@ -93,19 +93,6 @@ class MetaMonitoring:
             process = mp.Process(target=name_p)
             self.processes.append(process)
             process.start()
-
-
-    def zenoh_bridge(self, *bridge_id_p):
-        """
-        Activate zenoh bridge
-        """
-        bridge_id = ''.join(bridge_id_p)
-        cmd = f"zenoh-bridge-dds -d {bridge_id} -f"
-        try:
-            result = subprocess.run(cmd, capture_output=True, text=True, shell=True)
-        except subprocess.CalledProcessError as e:
-            print(f"Command '{e.cmd}' returned non-zero exit status {e.returncode}.")
-        self.queue.put(result)
 
 
     def zenoh_router(self, *router_id_p):
@@ -227,7 +214,6 @@ if __name__ == "__main__":
                                      experiment_duration_p=config['duration'], 
                                      experiment_timestep_p=config['step'],
                                      is_robot_p=config['remote'],
-                                     use_zenoh_p=config['zenoh'],
                                      robot_name_p=config['robot_name'],
                                      monitoring_path_p=config['monitoring_script_path'],
                                      database_path_p=config['database_path'],

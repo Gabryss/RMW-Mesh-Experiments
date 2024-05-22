@@ -17,7 +17,6 @@ class MasterMonitoring:
         self.ros_ws_path_list = Config.ROBOTS_ROS_WS_PATH_LIST.value
         self.ros_distro_list = Config.ROBOTS_ROS_DISTRO_LIST.value
         self.rmw_implementation = Config.RMW_IMPLEMENTATION.value
-        self.zenoh = Config.ZENOH.value
         if Config.LOCAL_DATASET_PATH.value == '' or Config.LOCAL_DATASET_PATH.value == None:
             self.local_dataset_path = os.getcwd()
         if Config.LOCAL_DATASET_PATH.value == '' or Config.LOCAL_DATASET_PATH.value == None:
@@ -40,13 +39,13 @@ class MasterMonitoring:
         # Remote robots
         if Config.USE_REMOTE.value:
             for thread_index in range(self.nb_connection):
-                thread = threading.Thread(target=self.run_remote_script, args=self.arguments+[self.robot_name_list[thread_index], Config.REMOTE_MONITORING_DIR.value, Config.REMOTE_DATASET_PATH.value, self.host_list[thread_index], self.username_list[thread_index], self.password_list[thread_index],self.ros_ws_path_list[thread_index], self.ros_distro_list[thread_index]])
+                thread = threading.Thread(target=self.run_remote_script, args=self.arguments+[self.robot_name_list[thread_index], Config.PROJECT_PATH.value, Config.REMOTE_DATASET_PATH.value, self.host_list[thread_index], self.username_list[thread_index], self.password_list[thread_index],self.ros_ws_path_list[thread_index], self.ros_distro_list[thread_index]])
                 thread.start()
                 self.threads.append(thread)
 
         # Local
         if Config.USE_LOCAL.value:
-            thread = threading.Thread(target=self.run_local_script, args=self.arguments+[Config.LOCAL_MONITORING_DIR.value])         
+            thread = threading.Thread(target=self.run_local_script, args=self.arguments+[Config.PROJECT_PATH.value])         
             thread.start()
             self.threads.append(thread)
 
@@ -80,7 +79,7 @@ class MasterMonitoring:
 
         if database_path == '' or database_path == None:
             database_path = os.getcwd()
-        if Config.REMOTE_MONITORING_DIR.value == '' or Config.REMOTE_MONITORING_DIR.value == None:
+        if Config.PROJECT_PATH.value == '' or Config.PROJECT_PATH.value == None:
             remote_dir_path = os.getcwd()
 
         try:
@@ -88,9 +87,6 @@ class MasterMonitoring:
             ssh.connect(host, username=username, password=password)
             print(Fore.RED + f"My name is {robot_name}")
             print(f"target is {Config.TARGET.value}")
-            # if self.zenoh:
-            #     stdin, stdout, stderr = ssh.exec_command(f"source /opt/ros/iron/setup.bash && export ROS_DOMAIN_ID=1 && python3 {remote_dir_path}/meta_monitoring.py {name} {duration} {step} -r -z -monitoring_script_path {remote_dir_path} -database_path {database_path} -packet_size {Config.PACKET_SIZE.value} -ros_ws_path {ros_ws_path} -ros_distro {ros_distro} -target {Config.TARGET.value}")
-            # else:
             stdin, stdout, stderr = ssh.exec_command(f"source /opt/ros/iron/setup.bash && export ROS_DOMAIN_ID=1 && python3 {remote_dir_path}/meta_monitoring.py {name} {duration} {step} -r -monitoring_script_path {remote_dir_path} -database_path {database_path} -packet_size {Config.PACKET_SIZE.value} -ros_ws_path {ros_ws_path} -ros_distro {ros_distro} -target {Config.TARGET.value} --robot_name {robot_name} --rmw_implementation {self.rmw_implementation}")
 
             # Wait for script execution to complete
@@ -147,17 +143,11 @@ class MasterMonitoring:
         if exp_path == '':
             exp_path = os.getcwd()
         
-        if Config.LOCAL_MONITORING_DIR.value:
-            # if self.zenoh:
-            #     result = subprocess.run(["python3", f"{Config.LOCAL_MONITORING_DIR.value}/meta_monitoring.py", f"{exp_name}", f"{exp_duration}", f"{exp_step}", "-z", "-monitoring_script", f"{exp_path}", "-database_path", f"{Config.LOCAL_DATASET_PATH.value}", "-packet_size", f"{Config.PACKET_SIZE.value}", "-ros_ws_path", f"{Config.MASTER_ROS_WS_PATH.value}", "-ros_distro", f"{Config.MASTER_ROS_DISTRO.value}", "--robot_name", "local", "--rmw_implementation",  f"{self.rmw_implementation}"], cwd=os.path.expanduser('~'), capture_output=True, text=True)
-            # else:
-            result = subprocess.run(["python3", f"{Config.LOCAL_MONITORING_DIR.value}/meta_monitoring.py", f"{exp_name}", f"{exp_duration}", f"{exp_step}", "-monitoring_script", f"{exp_path}", "-database_path", f"{Config.LOCAL_DATASET_PATH.value}", "-packet_size", f"{Config.PACKET_SIZE.value}", "-ros_ws_path", f"{Config.MASTER_ROS_WS_PATH.value}", "-ros_distro", f"{Config.MASTER_ROS_DISTRO.value}", "--robot_name", "local", "--rmw_implementation",  f"{self.rmw_implementation}"], cwd=os.path.expanduser('~'), capture_output=True, text=True)
+        if Config.PROJECT_PATH.value:
+            result = subprocess.run(["python3", f"{Config.PROJECT_PATH.value}/meta_monitoring.py", f"{exp_name}", f"{exp_duration}", f"{exp_step}", "-monitoring_script", f"{exp_path}", "-database_path", f"{Config.LOCAL_DATASET_PATH.value}", "-packet_size", f"{Config.PACKET_SIZE.value}", "-ros_ws_path", f"{Config.MASTER_ROS_WS_PATH.value}", "-ros_distro", f"{Config.MASTER_ROS_DISTRO.value}", "--robot_name", "local", "--rmw_implementation",  f"{self.rmw_implementation}"], cwd=os.path.expanduser('~'), capture_output=True, text=True)
         
         else:
             current_directory = os.getcwd()
-            # if self.zenoh:
-            #     result = subprocess.run(["python3", f"{current_directory}/meta_monitoring.py", f"{exp_name}", f"{exp_duration}", f"{exp_step}", "-z", "-monitoring_script", f"{exp_path}", "-database_path", f"{Config.LOCAL_DATASET_PATH.value}", "-packet_size", f"{Config.PACKET_SIZE.value}", "-ros_ws_path", f"{Config.MASTER_ROS_WS_PATH.value}", "-ros_distro", f"{Config.MASTER_ROS_DISTRO.value}", "--robot_name", "local", "--rmw_implementation",  f"{self.rmw_implementation}"], cwd=os.path.expanduser('~'), capture_output=True, text=True)
-            # else:
             result = subprocess.run(["python3", f"{current_directory}/meta_monitoring.py", f"{exp_name}", f"{exp_duration}", f"{exp_step}", "-monitoring_script", f"{exp_path}", "-database_path", f"{Config.LOCAL_DATASET_PATH.value}", "-packet_size", f"{Config.PACKET_SIZE.value}", "-ros_ws_path", f"{Config.MASTER_ROS_WS_PATH.value}", "-ros_distro", f"{Config.MASTER_ROS_DISTRO.value}", "--robot_name", "local", "--rmw_implementation",  f"{self.rmw_implementation}"], cwd=os.path.expanduser('~'), capture_output=True, text=True)
 
         print(Fore.LIGHTYELLOW_EX + "\n\n\n\n=================================")
