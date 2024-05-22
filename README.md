@@ -46,7 +46,14 @@ Note that you can have further documentation on each script by running:
 ```shell
 $ python3 <name_of_the_script.py> -h
 ```
+### MPROCS
 
+To get an overview of the experiment, just run 
+    
+    ```shell
+    $ mprocs --config ~/mesh_exp/remote_monitoring/mproc.yaml
+    ```
+use S to start a process, Q to stop it and R to restart it.
 
 ### Limitations
 Currently it is not possible to change dynamicaly or remotely the monitoring scripts during runtime. The name of the script should be hard coded within the `meta_monitoring.py` file.

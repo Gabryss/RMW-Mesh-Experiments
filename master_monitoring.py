@@ -14,14 +14,7 @@ class MasterMonitoring:
         self.username_list = Config.ROBOTS_USERNAME_LIST.value
         self.password_list = Config.ROBOTS_PASSWORD_LIST.value
         self.robot_name_list = Config.ROBOTS_NAME_LIST.value
-        self.ros_ws_path_list = Config.ROBOTS_ROS_WS_PATH_LIST.value
-        self.ros_distro_list = Config.ROBOTS_ROS_DISTRO_LIST.value
         self.rmw_implementation = Config.RMW_IMPLEMENTATION.value
-        if Config.LOCAL_DATASET_PATH.value == '' or Config.LOCAL_DATASET_PATH.value == None:
-            self.local_dataset_path = os.getcwd()
-        if Config.LOCAL_DATASET_PATH.value == '' or Config.LOCAL_DATASET_PATH.value == None:
-            self.local_dataset_path = os.getcwd()
-        self.arguments = [str(Config.EXPERIMENT_NAME.value).replace(' ','_'), str(Config.EXPERIMENT_TIME.value), str(Config.EXPERIMENT_TIMESTEP.value)]
         self.results = []
         self.nb_connection = len(Config.ROBOTS_HOST_LIST.value)
         self.start_threading()
@@ -39,13 +32,13 @@ class MasterMonitoring:
         # Remote robots
         if Config.USE_REMOTE.value:
             for thread_index in range(self.nb_connection):
-                thread = threading.Thread(target=self.run_remote_script, args=self.arguments+[self.robot_name_list[thread_index], Config.PROJECT_PATH.value, Config.REMOTE_DATASET_PATH.value, self.host_list[thread_index], self.username_list[thread_index], self.password_list[thread_index],self.ros_ws_path_list[thread_index], self.ros_distro_list[thread_index]])
+                thread = threading.Thread(target=self.run_remote_script, args=[self.robot_name_list[thread_index], self.host_list[thread_index]])
                 thread.start()
                 self.threads.append(thread)
 
         # Local
         if Config.USE_LOCAL.value:
-            thread = threading.Thread(target=self.run_local_script, args=self.arguments+[Config.PROJECT_PATH.value])         
+            thread = threading.Thread(target=self.run_local_script)         
             thread.start()
             self.threads.append(thread)
 
@@ -64,30 +57,22 @@ class MasterMonitoring:
         """
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        name = args_p[0]
-        duration = args_p[1]
-        step = args_p[2]
-        robot_name = args_p[3]
-        remote_dir_path = args_p[4]
-        database_path = args_p[5]
-        host = str(args_p[6])
-        username = str(args_p[7])
-        password = str(args_p[8])
-        ros_ws_path = str(args_p[9])
-        ros_distro = str(args_p[10])
-
-
-        if database_path == '' or database_path == None:
-            database_path = os.getcwd()
-        if Config.PROJECT_PATH.value == '' or Config.PROJECT_PATH.value == None:
-            remote_dir_path = os.getcwd()
+        name = str(Config.EXPERIMENT_NAME.value).replace(' ','_')
+        duration = Config.EXPERIMENT_TIME.value
+        step = Config.EXPERIMENT_TIMESTEP.value
+        remote_dir_path = Config.REMOTE_WS_PATH.value
+        username = Config.REMOTE_USERNAME.value
+        password = Config.REMOTE_PASSWORD.value
+        robot_name = args_p[0]
+        host = str(args_p[1])
 
         try:
             # Connect to the remote host
-            ssh.connect(host, username=username, password=password)
-            print(Fore.RED + f"My name is {robot_name}")
+            ssh.connect(host, username=username, password=password, timeout=Config.REMOTE_SSH_TIMEOUT.value, auth_timeout=Config.REMOTE_SSH_TIMEOUT.value)
+            print(Fore.MAGENTA + f"My name is {robot_name}")
             print(f"target is {Config.TARGET.value}")
-            stdin, stdout, stderr = ssh.exec_command(f"source /opt/ros/iron/setup.bash && export ROS_DOMAIN_ID=1 && python3 {remote_dir_path}/meta_monitoring.py {name} {duration} {step} -r -monitoring_script_path {remote_dir_path} -database_path {database_path} -packet_size {Config.PACKET_SIZE.value} -ros_ws_path {ros_ws_path} -ros_distro {ros_distro} -target {Config.TARGET.value} --robot_name {robot_name} --rmw_implementation {self.rmw_implementation}")
+            print(Style.RESET_ALL)
+            stdin, stdout, stderr = ssh.exec_command(f"source /opt/ros/iron/setup.bash && export ROS_DOMAIN_ID=1 && python3 {remote_dir_path}/meta_monitoring.py {name} {duration} {step} -r -monitoring_script_path {remote_dir_path} -packet_size {Config.PACKET_SIZE.value} -target {Config.TARGET.value} --robot_name {robot_name} --rmw_implementation {self.rmw_implementation}")
 
             # Wait for script execution to complete
             exit_status = stdout.channel.recv_exit_status()
@@ -107,7 +92,7 @@ class MasterMonitoring:
             # Print any errors
             error = stderr.read().decode().strip()
             if error:
-                print(Fore.RED + "Error:")
+                print(Fore.RED + "Errors:")
                 print(Fore.RED + error)
                 print(Style.RESET_ALL)
             
@@ -120,7 +105,7 @@ class MasterMonitoring:
 
             sftp = ssh.open_sftp()
 
-            self.copy_directory(sftp_p=sftp, local_dir_p=os.path.expanduser(Config.LOCAL_DATASET_PATH.value), remote_dir_p=Config.REMOTE_DATASET_PATH.value)            
+            self.copy_directory(sftp_p=sftp, local_dir_p=os.path.expanduser(Config.DATASET_PATH.value), remote_dir_p=Config.REMOTE_DATASET_PATH.value)            
 
         except Exception as e:
             print(Fore.RED + f"An error occurred during connection: {e}")
@@ -131,25 +116,20 @@ class MasterMonitoring:
             ssh.close()
 
 
-    def run_local_script(self, *arg_p):
+    def run_local_script(self):
         """
         Launch the meta_monitoring script that run on the local computer.
         """
-        exp_name = arg_p[0]
-        exp_duration = arg_p[1]
-        exp_step = arg_p[2]
-        exp_path = arg_p[3]
+        exp_name = str(Config.EXPERIMENT_NAME.value).replace(' ','_')
+        exp_duration = str(Config.EXPERIMENT_TIME.value)
+        exp_step = str(Config.EXPERIMENT_TIMESTEP.value)
         
-        if exp_path == '':
-            exp_path = os.getcwd()
+        try:
+            result = subprocess.run(["python3", f"{Config.PROJECT_PATH.value}/meta_monitoring.py", f"{exp_name}", f"{exp_duration}", f"{exp_step}", "-packet_size", f"{Config.PACKET_SIZE.value}", "--robot_name", "local", "--rmw_implementation",  f"{self.rmw_implementation}"], cwd=os.path.expanduser('~'), capture_output=True, text=True)
         
-        if Config.PROJECT_PATH.value:
-            result = subprocess.run(["python3", f"{Config.PROJECT_PATH.value}/meta_monitoring.py", f"{exp_name}", f"{exp_duration}", f"{exp_step}", "-monitoring_script", f"{exp_path}", "-database_path", f"{Config.LOCAL_DATASET_PATH.value}", "-packet_size", f"{Config.PACKET_SIZE.value}", "-ros_ws_path", f"{Config.MASTER_ROS_WS_PATH.value}", "-ros_distro", f"{Config.MASTER_ROS_DISTRO.value}", "--robot_name", "local", "--rmw_implementation",  f"{self.rmw_implementation}"], cwd=os.path.expanduser('~'), capture_output=True, text=True)
+        except subprocess.CalledProcessError as e:
+            print(f"Command '{e.cmd}' returned non-zero exit status {e.returncode}.")
         
-        else:
-            current_directory = os.getcwd()
-            result = subprocess.run(["python3", f"{current_directory}/meta_monitoring.py", f"{exp_name}", f"{exp_duration}", f"{exp_step}", "-monitoring_script", f"{exp_path}", "-database_path", f"{Config.LOCAL_DATASET_PATH.value}", "-packet_size", f"{Config.PACKET_SIZE.value}", "-ros_ws_path", f"{Config.MASTER_ROS_WS_PATH.value}", "-ros_distro", f"{Config.MASTER_ROS_DISTRO.value}", "--robot_name", "local", "--rmw_implementation",  f"{self.rmw_implementation}"], cwd=os.path.expanduser('~'), capture_output=True, text=True)
-
         print(Fore.LIGHTYELLOW_EX + "\n\n\n\n=================================")
         print(Style.RESET_ALL)
         print("Local output:")
@@ -158,7 +138,7 @@ class MasterMonitoring:
         # Print any errors
         error = result.stderr
         if error:
-                print(Fore.RED + "Error:")
+                print(Fore.RED + "Errors:")
                 print(Fore.RED + error)
                 print(Style.RESET_ALL)
         print(Fore.LIGHTYELLOW_EX + "=================================")

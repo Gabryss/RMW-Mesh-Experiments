@@ -5,11 +5,12 @@ import time
 import argparse
 import serial
 import subprocess
+from config import Config
 
 
 class Monitoring:
 
-    def __init__(self, experiment_name_p, experiment_duration_p=30, experiment_timestep_p=0.1, database_path_p="~/dataset"):
+    def __init__(self, experiment_name_p, experiment_duration_p=30, experiment_timestep_p=0.1, is_target_p=0):
         """
         Defaults attributes of the monitoring class are:
         - Experiment duration : 30 seconds
@@ -19,6 +20,13 @@ class Monitoring:
         self.experiment_name = experiment_name_p+"_global_monitoring"
         self.experiment_duration = float(experiment_duration_p)
         self.experiment_timestep = float(experiment_timestep_p)
+        self.database_path = Config.DATASET_PATH.value
+        self.is_target = is_target_p
+        self.table_row = ["Timestamp", "Bytes_Send", "Bytes_Received", "Packets_Send", "Packets_Received", "Errors_Send", "Errors_Received", "Drop_Incoming", "Drop_total", "CPU_percent", "CPU_time", "RAM_percent", "RAM_info"]
+        if not self.is_target:
+            self.table_row.append("Ping_target")
+        if self.get_gps_data:
+            self.table_row += ["LAT", "LONG", "ALT"]
         self.data = []
         self.old_network_data = None
         self.new_network_data = None
@@ -30,15 +38,8 @@ class Monitoring:
         self.serial_baudrate = 9600
         self.serial_timeout = 5
 
-        #Provides the required serial device info
-
-        #Starts the serial connection
 
 
-        if database_path_p == None or database_path_p == '':
-            self.path = os.getcwd()+"/dataset"
-        else:
-            self.path = os.path.expanduser(database_path_p)
         self.create_csv(self.experiment_name)
         self.get_data()
         
@@ -51,8 +52,8 @@ class Monitoring:
         Check if the dataset directory exist
         If not, create it
         """
-        if not os.path.exists(self.path):
-            os.makedirs(self.path)
+        if not os.path.exists(self.database_path):
+            os.makedirs(self.database_path)
 
 
     def create_csv(self, experiment_name_p):
@@ -60,9 +61,9 @@ class Monitoring:
         Create the csv file with the correct fields for the given experiment (name_p)
         """
         self.check_dataset_directory()
-        with open(f"{self.path}/{experiment_name_p}.csv", 'w', newline='') as file:
+        with open(f"{self.database_path}/{experiment_name_p}.csv", 'w', newline='') as file:
             writer = csv.writer(file)
-            writer.writerow(["Timestamp", "Bytes_Send", "Bytes_Received", "Packets_Send", "Packets_Received", "Errors_Send", "Errors_Received", "Drop_Incoming", "Drop_total", "CPU_percent", "CPU_time", "RAM_percent", "RAM_info", "Ping_target", "LAT", "LONG", "ALT"])
+            writer.writerow(self.table_row)
 
 
     def write_csv(self, force_p=False):
@@ -72,7 +73,7 @@ class Monitoring:
         """
         #Checks
         self.check_dataset_directory()
-        path = f"{self.path}/{self.experiment_name}.csv"
+        path = f"{self.database_path}/{self.experiment_name}.csv"
 
         if os.path.isfile(path) or force_p:
             with open(path, 'a',  encoding='UTF8', newline='') as file:
@@ -122,7 +123,7 @@ class Monitoring:
         """
         Ping the desired address
         """
-        res = subprocess.call(["ping", str(address_p), "-c1", "-W2", "-q"])
+        res = subprocess.call(["ping", address_p, "-c1", "-W1"])
         if res > 0:
             return 0
         else:
@@ -220,7 +221,7 @@ class Monitoring:
             cpu_results = self.cpu_measure()
             ram_results = self.ram_measure()
             gps_data = self.get_gps_data()
-            ping_target = self.ping("1.1.1.1")
+            ping_target = self.ping(Config.TARGET_IP.value)
             
             #Timestamp
             self.data.append(int(round(time.time() * 1000)) - self.starting_time)
@@ -244,7 +245,8 @@ class Monitoring:
             self.data.append(ram_results[1])
 
             #Ping
-            self.data.append(ping_target)
+            if not self.is_target:
+                self.data.append(ping_target)
 
             #GPS
             if gps_data:
@@ -270,12 +272,12 @@ if __name__ == "__main__":
     parser.add_argument("name", help="Experiment's name", type=str)
     parser.add_argument("duration", help="Experiment's duration", type=float)
     parser.add_argument("step", help="Experiment's timestep measure", type=float)
-    parser.add_argument("-database_path", help="Path of the database location", default='~/dataset', type=str)
-    
+    parser.add_argument("is_target", help="Is the device the target ?", type=float)
+
     args = parser.parse_args()
     config = vars(args)
     
-    monitoring = Monitoring(config['name'], 
-                            config['duration'], 
-                            config['step'],
-                            config['database_path'])
+    monitoring = Monitoring(experiment_name_p=config['name'], 
+                            experiment_duration_p=config['duration'], 
+                            experiment_timestep_p=config['step'],
+                            is_target_p=config['is_target'])

@@ -3,34 +3,29 @@ from pathlib import Path
 
 class Config(Enum):
     # Paths
+    PROJECT_NAME = "RMW-Mesh-Experiments"
     PROJECT_PATH = str(Path(__file__).parent.resolve())
     PARENT_PROJECT_PATH = str(Path(PROJECT_PATH).parent.resolve())
-    REMOTE_DATASET_PATH = "/home/pi/mesh_exp" + "/dataset"
-    LOCAL_DATASET_PATH = PARENT_PROJECT_PATH + "/dataset"
+    REMOTE_PATH = "/home/pi/mesh_exp"
+    REMOTE_WS_PATH = REMOTE_PATH + PROJECT_NAME
+    REMOTE_DATASET_PATH = REMOTE_PATH + "/dataset"
+    DATASET_PATH = PARENT_PROJECT_PATH + "/dataset"
 
+    REMOTE_USERNAME = "pi"
+    REMOTE_PASSWORD = "raspberry"
 
     # Target
     TARGET = "leo02"
+    TARGET_IP = "1.1.1.1"
 
     #LeoA
     LEOA_NAME = "leo02"
     LEOA_HOST = "192.168.44.122"
-    LEOA_USERNAME = "pi"
-    LEOA_PASSWORD = "raspberry"
-    LEOA_ROS_WS_PATH = PROJECT_PATH + "/exp_ws"
-    LEOA_ROS_DISTRO = "iron"
 
     #LeoB
     LEOB_NAME = "leo03"
     LEOB_HOST = "192.168.44.132"
-    LEOB_USERNAME = "pi"
-    LEOB_PASSWORD = "raspberry"
-    LEOB_ROS_WS_PATH = PROJECT_PATH + "/exp_ws"
-    LEOB_ROS_DISTRO = "iron"
 
-    # MASTER
-    MASTER_ROS_WS_PATH = PROJECT_PATH + "/exp_ws"
-    MASTER_ROS_DISTRO = "iron"
 
     # DDS
     #DDS = "fastrtps"
@@ -38,20 +33,11 @@ class Config(Enum):
     # DDS = "zenoh"
 
     RMW_IMPLEMENTATION = f"rmw_{DDS}_cpp"
-    # ROS_DOMAIN_ID
 
     ROBOTS_NAME_LIST = [LEOA_NAME, LEOB_NAME]
     ROBOTS_HOST_LIST = [LEOA_HOST, LEOB_HOST]
-    ROBOTS_USERNAME_LIST = [LEOA_USERNAME, LEOB_USERNAME]
-    ROBOTS_PASSWORD_LIST = [LEOA_PASSWORD, LEOB_PASSWORD]
-    ROBOTS_ROS_WS_PATH_LIST = [LEOA_ROS_WS_PATH, LEOB_ROS_WS_PATH]
-    ROBOTS_ROS_DISTRO_LIST = [LEOA_ROS_DISTRO, LEOB_ROS_DISTRO]
     # ROBOTS_NAME_LIST = [LEOA_NAME]
     # ROBOTS_HOST_LIST = [LEOA_HOST]
-    # ROBOTS_USERNAME_LIST = [LEOA_USERNAME]
-    # ROBOTS_PASSWORD_LIST = [LEOA_PASSWORD]
-    # ROBOTS_ROS_WS_PATH_LIST = [LEOA_ROS_WS_PATH]
-    # ROBOTS_ROS_DISTRO_LIST = [LEOA_ROS_DISTRO]
 
 
     EXPERIMENT_NAME = f"{DDS}_test_9"
