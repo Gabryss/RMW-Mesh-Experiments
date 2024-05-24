@@ -29,6 +29,7 @@ Installed libraries:
 - `psutil` (Give measurement related to your computer)
 - `paramiko` (SSH connection)
 - `colorama` (Nice looking terminal output)
+- `pyserial` (Allow the script to interface with serial interface, used for the GPS)
 
 Strictly speaking, the monitoring station should have the whole package whereas the other rovers only the `monitoring.py` and `meta_monitoring.py` files. However, installing the package on the robot has no effect. 
 
