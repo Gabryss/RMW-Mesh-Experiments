@@ -1,6 +1,6 @@
 procs:
   Master Monitoring:
-    shell: "python3 ~/mesh_exp/remote_monitoring/master_monitoring.py"
+    shell: "python3 ~/mesh_exp/RMW-Mesh-Experiments/master_monitoring.py"
     autostart: false
   Zenoh Router:
     shell: "ssh -t pi@192.168.44.122 'tmux new -s zenoh_router \"source /home/pi/zenoh_ws/install/setup.bash && export ZENOH_ROUTER_CONFIG_URI=/home/pi/mesh_exp/remote_monitoring/zenoh_config.json5 && ros2 run rmw_zenoh_cpp rmw_zenohd\"'"
@@ -17,11 +17,8 @@ procs:
   Iron  Teleop:
     shell: "bash -c 'source /opt/ros/iron/setup.bash && export ROS_DOMAIN_ID=51 && ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args --remap cmd_vel:=/leo02/cmd_vel'"
     autostart: false
-  Ping Leo02:
-    shell: "ping 192.168.44.122"
-    autostart: true
-  Ping Leo03:
-    shell: "ping 192.168.44.132"
+  Ping StaticPoint:
+    shell: "ping 192.168.44.150"
     autostart: true
   Ping Antenna02:
     shell: "ping 192.168.44.120"
@@ -29,10 +26,28 @@ procs:
   Ping Antenna03:
     shell: "ping 192.168.44.130"
     autostart: true
+  Ping Leo02:
+    shell: "ping 192.168.44.122"
+    autostart: true
+  Ping Leo03:
+    shell: "ping 192.168.44.132"
+    autostart: true
+  Ssh Leo02:
+    shell: "ssh pi@192.168.44.122"
+    autostart: false
+  Ssh Leo03:
+    shell: "ssh pi@192.168.44.132"
+    autostart: false
   Reboot Leo02:
     shell: "ssh pi@192.168.44.122 'sudo reboot'"
     autostart: false
   Reboot Leo03:
     shell: "ssh pi@192.168.44.132 'sudo reboot'"
     autostart: false
+  Iperf server:
+    shell: "iperf3 -s"
+    autostart: false
+  Iperf client:
+      shell: "ssh pi@192.168.44.122 'iperf3 -d -c 192.168.44.205'"
+      autostart: false
   

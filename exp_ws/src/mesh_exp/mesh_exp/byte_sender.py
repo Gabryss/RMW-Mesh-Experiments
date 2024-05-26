@@ -43,9 +43,6 @@ class NetworkTestPublisher(Node):
 
         self.stop_timer = self.create_timer(self.exp_time, self.stop_callback)
 
-        # Velocity publisher
-        self.cmd_publisher_ = self.create_publisher(Twist, self.robot_name + 'cmd_vel', 10)
-
 
     def stop_callback(self):
         self.get_logger().info('Experiment time over, shutting down...')
@@ -59,11 +56,6 @@ class NetworkTestPublisher(Node):
         msg.data = 'a' * (self.get_global_var(self.data_size) -8)  # create a string of the desired size minus the size of the header
         msg.millisec = int(round(time.time() * 1000))
         self.publisher_.publish(msg)
-
-        # Send velocity commands
-        twist = Twist()
-        twist.linear.x = 0.5
-        self.cmd_publisher_.publish(twist)
         
 
     def get_global_var(self,name):
