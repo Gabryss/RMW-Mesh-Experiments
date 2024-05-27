@@ -11,8 +11,6 @@ class MasterMonitoring:
 
     def __init__(self) -> None:
         self.host_list = Config.ROBOTS_HOST_LIST.value
-        self.username_list = Config.ROBOTS_USERNAME_LIST.value
-        self.password_list = Config.ROBOTS_PASSWORD_LIST.value
         self.robot_name_list = Config.ROBOTS_NAME_LIST.value
         self.rmw_implementation = Config.RMW_IMPLEMENTATION.value
         self.results = []
@@ -72,7 +70,7 @@ class MasterMonitoring:
             print(Fore.MAGENTA + f"My name is {robot_name}")
             print(f"target is {Config.TARGET.value}")
             print(Style.RESET_ALL)
-            stdin, stdout, stderr = ssh.exec_command(f"source /opt/ros/iron/setup.bash && export ROS_DOMAIN_ID=1 && python3 {remote_dir_path}/meta_monitoring.py {name} {duration} {step} -r -monitoring_script_path {remote_dir_path} -packet_size {Config.PACKET_SIZE.value} -target {Config.TARGET.value} --robot_name {robot_name} --rmw_implementation {self.rmw_implementation}")
+            stdin, stdout, stderr = ssh.exec_command(f"source /opt/ros/iron/setup.bash && export ROS_DOMAIN_ID=1 && python3 {remote_dir_path}/meta_monitoring.py {name} {duration} {step} -r -packet_size {Config.PACKET_SIZE.value} -target {Config.TARGET.value} --robot_name {robot_name} --rmw_implementation {self.rmw_implementation}")
 
             # Wait for script execution to complete
             exit_status = stdout.channel.recv_exit_status()

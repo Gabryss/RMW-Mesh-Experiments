@@ -3,7 +3,7 @@ procs:
     shell: "python3 ~/mesh_exp/RMW-Mesh-Experiments/master_monitoring.py"
     autostart: false
   Zenoh Router:
-    shell: "ssh -t pi@192.168.44.122 'tmux new -s zenoh_router \"source /home/pi/zenoh_ws/install/setup.bash && export ZENOH_ROUTER_CONFIG_URI=/home/pi/mesh_exp/remote_monitoring/zenoh_config.json5 && ros2 run rmw_zenoh_cpp rmw_zenohd\"'"
+    shell: "ssh -t pi@192.168.44.122 'tmux new -s zenoh_router \"source /home/pi/zenoh_ws/install/setup.bash && export ZENOH_ROUTER_CONFIG_URI=/home/pi/mesh_exp/RMW-Mesh-Experiments/zenoh_config.json5 && ros2 run rmw_zenoh_cpp rmw_zenohd\"'"
     autostart: false
   Attach Zenoh Router:
     shell: "ssh -t pi@192.168.44.122 'tmux attach -t zenoh_router'"
@@ -50,4 +50,7 @@ procs:
   Iperf client:
       shell: "ssh pi@192.168.44.122 'iperf3 -d -c 192.168.44.205'"
       autostart: false
+  Network Topology:
+    shell: "python3 ~/mesh_exp/RMW-Mesh-Experiments/network_topology.py"
+    autostart: false
   
