@@ -47,10 +47,12 @@ procs:
   Iperf server:
     shell: "iperf3 -s"
     autostart: false
-  Iperf client:
-      shell: "ssh pi@192.168.44.122 'iperf3 -d -c 192.168.44.205'"
+  Iperf client tcp:
+      shell: "ssh pi@192.168.44.122 'iperf3 -d -c 192.168.44.205' > iperf_tcp.log"
+      autostart: false
+  Iperf client udp:
+      shell: "ssh pi@192.168.44.122 'iperf3 -d -c 192.168.44.205' -u > iperf_udp.log"
       autostart: false
   Network Topology:
     shell: "python3 ~/mesh_exp/RMW-Mesh-Experiments/network_topology.py"
     autostart: false
-  
