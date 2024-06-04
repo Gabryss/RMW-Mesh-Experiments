@@ -20,7 +20,7 @@ def rename_columns(folder_path, column_name_p):
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
-        print("Usage: python script_name.py <folder_path> <column_names>")
+        print("Usage: python script_name.py <folder_path> <column_names>, example: python3 rename_columns.py ../../dataset/zenoh_clean_test/ \"Timestamp,Delay,Size\"")
         sys.exit(1)
 
     folder_path = sys.argv[1]

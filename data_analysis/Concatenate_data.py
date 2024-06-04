@@ -1,103 +1,64 @@
+import os
 import pandas as pd
 import glob
 
+class CSVFileMerger:
+    def __init__(self, folder_path):
+        self.folder_path = folder_path
 
+    def find_matching_files(self, suffixes):
+        # Create a dictionary to hold the groups of matching files
+        matching_files = {}
+        # List all files in the directory
+        #files = os.listdir(self.folder_path)
+        files = glob.glob(os.path.join(self.folder_path, '**/*.csv'), recursive=True)
+        # Iterate over each file
+        for file in files:
+            # Check if the file ends with any of the specified suffixes
+            for suffix in suffixes:
+                if file.endswith(suffix):
+                    # Extract the prefix (common part of the filename)
+                    prefix = file.split(suffix)[0]
+                    # Add the file to the corresponding group in the dictionary
+                    if prefix not in matching_files:
+                        matching_files[prefix] = {s: '' for s in suffixes}
+                    matching_files[prefix][suffix] = file
+                    break
+        return matching_files
 
-RENAME_COLUMNS = "Timestamp,Delay,Size\n"
+    def merge_files(self):
+        # Define the suffixes for the files to be merged
+        suffixes = ['_leo02_global_monitoring.csv', '_local_delay.csv', '_local_global_monitoring.csv']
+        # Find all matching files
+        matching_files = self.find_matching_files(suffixes)
 
-
-class Concatenate_data():
-    """
-    
-    """
-    def __init__(self, path_p, sub_directories_p=False, columns_p=[], col_all_p=False, output_path_p="./automatic_name.csv") -> None:
-        """
-        Concatenate data into one single file. Can use data from subdirectories.
-        """
-        self.path = path_p
-        self.use_sub = sub_directories_p
-        self.use_all_columns = col_all_p
-        self.colums = columns_p
-        if self.colums == []:
-            self.use_all_columns = True
-        self.output_path = output_path_p
-        self.data = pd.DataFrame()
-
-    
-
-    def merge_column(self):
-        """
-        Append data to a single file
-        Each csv's data are appened to the final file as new columns
-        """
-        #Work in progress
-        if self.use_sub:
-            csv_files = glob.glob('*.{}'.format('csv'))
-            csv_files
+        robot_names = {
+        '_leo02_global_monitoring.csv': '_leo02',
+        '_local_delay.csv': '_local',
+        '_local_global_monitoring.csv': '_local'
+        }
         
-        else:
-            csv_files = glob.glob('./fast_KILO/*.{}'.format('csv')) 
-            l = []
-            
-            for f in csv_files:
-                l.append(pd.read_csv(f))
+            # Iterate over each group of matching files
+        for prefix, files_dict in matching_files.items():
+            # Check if there are exactly three files in the group
+            if all(files_dict.values()):
+                # Read the first file
+                merged_df = pd.read_csv(os.path.join(self.folder_path, files_dict[suffixes[0]]))
+                # Rename columns with the robot name suffix
+                merged_df.columns = [col if col == 'Timestamp' else col + robot_names[suffixes[0]] for col in merged_df.columns]
                 
-            df_res = pd.concat(l, ignore_index=True, sort=False)
-            df_res.to_csv("./test.csv")
-            print(df_res)
-
-
-    def merge_row(self):
-        """
-        Append data to a single file
-        Each csv's data are appened to the final file as new rows
-        """
-
-        #Work in progress
-        if self.use_sub:
-            csv_files = glob.glob('*.{}'.format('csv'))
-            csv_files
-        
-        else:
-            csv_files = glob.glob('./fast_KILO/*.{}'.format('csv')) 
-            l = []
-            
-            for f in csv_files:
-                l.append(pd.read_csv(f))
+                # Merge the remaining files
+                for suffix in suffixes[1:]:
+                    df = pd.read_csv(os.path.join(self.folder_path, files_dict[suffix]))
+                    # Rename columns with the robot name suffix
+                    df.columns = [col if col == 'Timestamp' else col + robot_names[suffix] for col in df.columns]
+                    # Merge with the main dataframe
+                    merged_df = merged_df.merge(df, on='Timestamp', how='outer')
                 
-            df_res = pd.concat(l, ignore_index=True, sort=False)
-            df_res.to_csv("./test.csv")
-            print(df_res)
-    
-
-    def write_csv(self, path_p):
-        """
-        Write the name of the 
-        """
-        self.data.to_csv(path_p)
-
-
-
-
-# concat = Concatenate_data(path_p="YES")
-
- 
-def rename_columns(column_name_p):
-    """
-    Rename the first column of a file
-    """
-    delay_files = glob.glob('/home/gabriel/Documents/TheLab/python/data_science/NLOS_exp/*/*_delay.{}'.format('csv')) 
-
-    for fil in delay_files:
-
-        with open(fil) as f:
-            lines = f.readlines()
-
-        lines[0] = column_name_p # ['This is the first line.\n', 'This is the second line.\n']
-
-        with open(fil, "w") as f:
-            f.writelines(lines)
-
-        f.close()
-
-rename_columns(RENAME_COLUMNS)
+                # Save the merged dataframe to a new CSV file
+                merged_filename = f"{prefix}_merged.csv"
+                merged_df.to_csv(os.path.join(self.folder_path, merged_filename), index=False)
+                print(f"Merged file saved as {merged_filename}")
+            else:
+                # If there are not exactly three files, print a message
+                print(f"Could not find a complete set of files for prefix '{prefix}'")
