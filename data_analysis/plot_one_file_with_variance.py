@@ -1,55 +1,74 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+import argparse
+import sys
+import numpy as np
 
+class DataPlotter:
+    def __init__(self, rmw, prefix, display_columns, base_path='/home/lchovet/mesh_exp/dataset/'):
+        self.rmw = rmw
+        self.prefix = prefix
+        self.display_columns = display_columns
+        self.base_path = base_path
+        self.plot_variances = False
+        self.data_original = None
+        self.data_variance = None
+        self.timestamps = None
 
-RMW = "zenoh"
-# Load the new CSV file to inspect its contents
-file_path = f'/home/mechaick/mesh_exp/dataset/{RMW}_clean_test/_average.csv'
-data_original = pd.read_csv(file_path)
+    def load_data(self):
+        file_path = f'{self.base_path}{self.rmw}_clean/{self.prefix}_average.csv'
+        self.data_original = pd.read_csv(file_path)
 
-file_path_variance = f'/home/mechaick/mesh_exp/dataset/{RMW}_clean_test/_variance.csv'
-data_variance = pd.read_csv(file_path_variance)
+        file_path_variance = f'{self.base_path}{self.rmw}_clean/{self.prefix}_variance.csv'
+        self.data_variance = pd.read_csv(file_path_variance)
 
+    def extract_and_interpolate(self):
+        self.timestamps = self.data_original['Timestamp']
 
-# Extract the relevant columns from the original data
-timestamps = data_original['Timestamp']
-delay_local = data_original['Delay_local']
-ping_target = data_original['Ping_target_local']
+        for column in self.display_columns:
+            self.data_original[column] = self.data_original[column].interpolate()
+            self.data_variance[column] = self.data_variance[column].interpolate()
 
-# Extract the variance columns from the variance data
-delay_variance = data_variance['Delay_local']
-ping_variance = data_variance['Ping_target_local']
+    def plot_data(self):
+        # Convert timestamps to numpy array
+        timestamps_np = self.timestamps.to_numpy()
 
-# Interpolating the missing values in the relevant columns
-delay_local_interpolated = delay_local.interpolate()
-ping_target_interpolated = ping_target.interpolate()
-ping_target_interpolated = ping_target_interpolated*10
-delay_variance_interpolated = delay_variance.interpolate()
-ping_variance_interpolated = ping_variance.interpolate()
-ping_variance_interpolated = ping_variance_interpolated*10
+        # Initialize subplots
+        num_plots = len(self.display_columns)
+        fig, axs = plt.subplots(num_plots, 1, figsize=(12, 6 * num_plots))
 
-# Convert pandas Series to numpy arrays for plotting
-timestamps_np = timestamps.to_numpy()
-delay_local_np = delay_local_interpolated.to_numpy()
-ping_target_np = ping_target_interpolated.to_numpy()
-delay_variance_np = delay_variance_interpolated.to_numpy()
-ping_variance_np = ping_variance_interpolated.to_numpy()
+        if not isinstance(axs, np.ndarray):
+            axs = [axs]
 
-# Plotting Delay Local and Ping Target Local with variance error bands
-plt.figure(figsize=(12, 6))
+        # Plot each selected column
+        for i, column in enumerate(self.display_columns):
+            data_np = self.data_original[column].to_numpy()
+            variance_np = self.data_variance[column].to_numpy()
 
-# Plot Delay Local with variance
-plt.plot(timestamps_np, delay_local_np, label='Delay Local')
-plt.fill_between(timestamps_np, delay_local_np - delay_variance_np, delay_local_np + delay_variance_np, color='blue', alpha=0.2)
+            axs[i].plot(timestamps_np, data_np, label=column)
+            if self.plot_variances:
+                axs[i].fill_between(timestamps_np, data_np - variance_np, data_np + variance_np, alpha=0.2)
+            axs[i].set_ylabel(column)
+            axs[i].legend()
 
-# Plot Ping Target Local with variance
-plt.plot(timestamps_np, ping_target_np, label='Ping Target Local', color='orange')
-plt.fill_between(timestamps_np, ping_target_np - ping_variance_np, ping_target_np + ping_variance_np, color='orange', alpha=0.2)
+        plt.xlabel('Timestamp')
+        plt.tight_layout()
+        plt.show()
 
-plt.xlabel('Timestamp')
-plt.ylabel('Values')
-plt.title('Delay Local and Ping Target Local over Time with Variance')
-plt.legend()
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Plot data with variance from CSV files.')
+    parser.add_argument('rmw', type=str, help='RMW value')
+    parser.add_argument('prefix', type=str, help='Prefix for the CSV files')
+    parser.add_argument('display_columns', nargs='+', help='List of columns to display')
 
-plt.tight_layout()
-plt.show()
+    args = parser.parse_args()
+
+    if not args.rmw or not args.prefix or not args.display_columns:
+        print("Usage: python your_script_name.py <RMW> <Prefix> <Display_Columns>")
+        print("Example: python3 plot_one_file_with_variance.py zenoh zenoh_clean Delay_local Ping_target_local Bytes_Send_leo02 RAM_percent_leo02")
+        sys.exit(1)
+
+    plotter = DataPlotter(args.rmw, args.prefix, args.display_columns)
+    plotter.load_data()
+    plotter.extract_and_interpolate()
+    plotter.plot_data()
