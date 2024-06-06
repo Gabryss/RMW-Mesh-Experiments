@@ -56,7 +56,73 @@ To get an overview of the experiment, just run
     ```
 use S to start a process, Q to stop it and R to restart it.
 
+
 ### Limitations
 Currently it is not possible to change dynamicaly or remotely the monitoring scripts during runtime. The name of the script should be hard coded within the `meta_monitoring.py` file.
 
 This package is experiment oriented, meaning the first purpose is to collect efficiently data, not do live monitoring. Live monitoring would probably change deeply the architecture of the package.
+
+## Data Analysis
+
+This is made of two main parts, the data treatment and the plot
+
+### Data treatment
+
+The data treatment is performed in four steps, all launched from the script called `global_processing.py`. It should be called on the root folder of every DDS
+
+```shell
+python3 global_processing.py <folder_path>
+```
+
+The program calls 4 classes:
+- rename_column: Rename the column "TimeStamp" of the delay files, that should be "Timestamp"
+- CSVFileMerger: Merges the three files of each run in one file that finishes by *_merged.csv, it also resamples the data at a 1 second rate in q *_resampled.csv
+- SizeAverageVar: Compute the average and variance of the 5 runs for a message size, for a RMW
+- RMWAverageVar: Compute the overall average and variance for all the runs for all the sizes of a DDS
+
+If you want to compute the average of only certain runs you can run
+
+```shell
+python3 rmw_average_variance_select.py <folder_path> <list of sizes>
+```
+example
+
+```shell
+python3 rmw_average_variance_select.py /home/lchovet/mesh_exp/dataset/zenoh_clean KILO32 KILO64
+```
+
+You will get files named with the sizes at the root of the RMW folder
+
+### Data plotting
+
+`plot_all_rmw.py` is used to plot as many metrics as wanted, according to time for the three RMW. By default, it refers to the global average
+
+Arguments:
+- <Metrics> a list of metrics to display
+- `--plot_variances` to plot the variances
+- `--use_run` to plot the data for only one run and not the average
+- `--run_size <SIZE>` to  indicate which message size to be diplayed
+- `--run_number <int>` to indicate which number to run, make sure every RMW have a run of this value
+
+Example:
+
+```shell
+python3 plot_all_rmw.py LONG_leo02 LAT_leo02 Delay_local Ping_target_local Bytes_Send_leo02 RAM_percent_leo02 --use_run --run_size KILO8 --run_number 3
+
+```
+
+`plot_overview.py` is used to plot specificaly the Px and Py, Reachability and Delay, giving the overview for a given run or the average using the same arguments as plot_all_rmw
+
+`plot_overview_one.py` is the same as plot overview but only for one DDS, it takes an additionnal argument for the rmw
+
+**Ploting the overview for Zenoh, for the 6th run of the size KIL1O6**
+
+```shell
+python3 plot_overview_one_rmw.py zenoh --use_run --run_size KILO16 --run_number 6
+```
+
+**Ploting the overview for Zenoh, for the average with variance**
+
+```shell
+python3 plot_overview_one_rmw.py zenoh --plot_variances
+```
