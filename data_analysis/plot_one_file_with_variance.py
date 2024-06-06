@@ -3,31 +3,33 @@ import matplotlib.pyplot as plt
 import argparse
 import sys
 import numpy as np
+import os
 
 class DataPlotter:
-    def __init__(self, rmw, prefix, display_columns, base_path='/home/lchovet/mesh_exp/dataset/'):
-        self.rmw = rmw
-        self.prefix = prefix
+    def __init__(self, rmw, prefix, display_columns, base_path='/mesh_exp/dataset/', use_run=False, run_size="KILO8", run_number=3, plot_variances=True):
         self.display_columns = display_columns
-        self.base_path = base_path
-        self.plot_variances = False
+        self.base_path = os.path.expanduser("~") + base_path
+        self.plot_variances = plot_variances
+        self.use_run = use_run
+        self.run_size = run_size
+        self.run_number = run_number
         self.data_original = None
         self.data_variance = None
         self.timestamps = None
 
     def load_data(self):
-        file_path = f'{self.base_path}{self.rmw}_clean/{self.prefix}_average.csv'
-        self.data_original = pd.read_csv(file_path)
+        if not self.use_run:
+            file_path = f'{self.base_path}{self.rmw}_clean/{self.prefix}_average.csv'
+            self.data_original = pd.read_csv(file_path)
 
-        file_path_variance = f'{self.base_path}{self.rmw}_clean/{self.prefix}_variance.csv'
-        self.data_variance = pd.read_csv(file_path_variance)
+            file_path_variance = f'{self.base_path}{self.rmw}_clean/{self.prefix}_variance.csv'
+            self.data_variance = pd.read_csv(file_path_variance)
+        else:
+            file_path = f'{self.base_path}{self.rmw}_clean/{self.rmw}_{self.run_size}/{self.rmw}_{self.run_size}_exp_{self.run_number}_resampled.csv'
+            self.data_original = pd.read_csv(file_path)
 
     def extract_and_interpolate(self):
         self.timestamps = self.data_original['Timestamp']
-
-        for column in self.display_columns:
-            self.data_original[column] = self.data_original[column].interpolate()
-            self.data_variance[column] = self.data_variance[column].interpolate()
 
     def plot_data(self):
         # Convert timestamps to numpy array
@@ -57,18 +59,18 @@ class DataPlotter:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Plot data with variance from CSV files.')
-    parser.add_argument('rmw', type=str, help='RMW value')
+
+    parser.add_argument('rmw', type=str, help='RMW to plot')
     parser.add_argument('prefix', type=str, help='Prefix for the CSV files')
     parser.add_argument('display_columns', nargs='+', help='List of columns to display')
+    parser.add_argument('--use_run', action='store_true', help='Use run data instead of averaged data')
+    parser.add_argument('--run_size', type=str, default="KILO8", help='Size of the run')
+    parser.add_argument('--run_number', type=str, default="3", help='Run number')
+    parser.add_argument('--plot_variances', action='store_true', help='Plot variances')
 
     args = parser.parse_args()
 
-    if not args.rmw or not args.prefix or not args.display_columns:
-        print("Usage: python your_script_name.py <RMW> <Prefix> <Display_Columns>")
-        print("Example: python3 plot_one_file_with_variance.py zenoh zenoh_clean Delay_local Ping_target_local Bytes_Send_leo02 RAM_percent_leo02")
-        sys.exit(1)
-
-    plotter = DataPlotter(args.rmw, args.prefix, args.display_columns)
+    plotter = DataPlotter(args.display_columns, use_run=args.use_run, run_size=args.run_size, run_number=args.run_number, plot_variances=args.plot_variances)
     plotter.load_data()
     plotter.extract_and_interpolate()
     plotter.plot_data()

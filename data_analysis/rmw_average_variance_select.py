@@ -22,7 +22,7 @@ class RMWAverageVarSelect:
         csv_files = []
 
         for size in self.size_select:
-            pattern = os.path.join(self.folder_path, f'**/*_{size}_*_merged.csv')
+            pattern = os.path.join(self.folder_path, f'**/*_{size}_*_resampled.csv')
             csv_files.extend(glob.glob(pattern, recursive=True))
 
         # Load all dataframes and convert timestamps from milliseconds to seconds
@@ -51,7 +51,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if not args.folder_path or not args.size_select:
-        print("Usage: python your_script_name.py /path/to/folder KILO KILO2")
         print("Example: python3 rmw_average_variance_select.py /home/lchovet/mesh_exp/dataset/zenoh_clean KILO32 KILO64")
         sys.exit(1)
 

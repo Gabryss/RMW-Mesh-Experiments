@@ -4,6 +4,7 @@ from Concatenate_data import CSVFileMerger
 from size_average_variance import SizeAverageVar
 from rmw_average_variance import RMWAverageVar
 from rename_columns import rename_columns
+
 if __name__ == "__main__":
     if len(sys.argv) != 2:
         print("Usage: python3 global_processing.py <folder_path> ")

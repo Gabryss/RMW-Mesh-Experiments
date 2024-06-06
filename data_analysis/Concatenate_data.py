@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+import numpy as np
 import glob
 
 class CSVFileMerger:
@@ -59,6 +60,31 @@ class CSVFileMerger:
                 merged_filename = f"{prefix}_merged.csv"
                 merged_df.to_csv(os.path.join(self.folder_path, merged_filename), index=False)
                 print(f"Merged file saved as {merged_filename}")
+                # Resample the data by second and calculate the mean for each second
+                resampled_filename = f"{prefix}_resampled.csv"
+                self.resampling_to_sec(merged_df, resampled_filename)
+
             else:
                 # If there are not exactly three files, print a message
                 print(f"Could not find a complete set of files for prefix '{prefix}'")
+
+    def resampling_to_sec(self, data, output_file_path):
+        # Convert the 'Timestamp' column to datetime format
+        data['Timestamp'] = pd.to_datetime(data['Timestamp'], unit='ms')
+
+        # Resample the data by second and calculate the mean for each second
+        data.set_index('Timestamp', inplace=True)
+        resampled_data = data.resample('s').mean()
+
+        # Preserve NaNs in seconds where no data is available
+        resampled_data = resampled_data.replace({0: np.nan})
+
+        # Before saving, replace all the NaN of Ping_target_local with 0
+        resampled_data['Ping_target_local'] = resampled_data['Ping_target_local'].fillna(0)
+
+        # Convert the index to integer seconds since epoch
+        resampled_data.index = (resampled_data.index - pd.Timestamp("1970-01-01")) // pd.Timedelta('1s')
+
+        resampled_data.to_csv(output_file_path)
+
+   
