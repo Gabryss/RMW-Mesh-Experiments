@@ -3,8 +3,9 @@ Plot the CPU and RAM usage of the ROS 2 processes during the RMW mesh experiment
 """
 import pandas as pd
 import matplotlib.pyplot as plt
+import pathlib
 
-PATH = "/home/gabriel/Lab/python/data_science/fast_mesh_exp_2"
+PATH = str(pathlib.Path(__file__).parent.resolve()) + '/data/Cleaned/fast/fast_KILO8'
 EXP = 2
 
 
@@ -12,8 +13,8 @@ class CPU_RAM_Plot:
 
     def __init__(self, path_p) -> None:
         self.path = path_p
-        self.df_sender = pd.read_csv(self.path+f'/fast_KILO8/fastrtps_KILO8_exp_{str(EXP)}_leo02_global_monitoring.csv')
-        self.df_receiver = pd.read_csv(self.path+f'/fast_KILO8/fastrtps_KILO8_exp_{str(EXP)}_local_global_monitoring.csv')
+        self.df_sender = pd.read_csv(self.path+f'/fastrtps_KILO8_exp_{str(EXP)}_leo02_global_monitoring.csv')
+        self.df_receiver = pd.read_csv(self.path+f'/fastrtps_KILO8_exp_{str(EXP)}_local_global_monitoring.csv')
         self.format_data()
 
 
