@@ -2,12 +2,11 @@
 Takes GPS coordinates as an input and plot them on a graph
 """
 import pandas as pd
-
 import plotly.graph_objects as go
-
 import random as rd
+import pathlib
 
-PATH = "/home/gabriel/Lab/python/data_science/fast_mesh_exp_2/fast_KILO8"
+PATH = str(pathlib.Path(__file__).parent.resolve()) + '/data/Cleaned/fast/fast_KILO8'
 NB_TRAJECTORIES = 4
 
 
