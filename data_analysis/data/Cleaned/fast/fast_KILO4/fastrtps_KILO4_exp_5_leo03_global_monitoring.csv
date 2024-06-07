@@ -1,0 +1,3 @@
+Timestamp,Bytes_Send,Bytes_Received,Packets_Send,Packets_Received,Errors_Send,Errors_Received,Drop_Incoming,Drop_total,CPU_percent,CPU_time,RAM_percent,RAM_info,Ping_target,LAT,LONG,ALT
+617,0,0,0,0,0,0,0,0,0.0,0.52,0.8398405195302638,15806464,0,49.62668983333333,6.159839166666666,336.9
+1621,0,154,0,1,0,0,0,0,0.0,0.52,0.8398405195302638,15806464,0,49.626689333333324,6.159839166666666,336.9
