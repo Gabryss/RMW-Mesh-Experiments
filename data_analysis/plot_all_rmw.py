@@ -23,35 +23,37 @@ class DataPlotter:
 
     def load_data(self):
         if not self.use_run:
-            file_path = f'{self.base_path}fast_clean/fast_clean_average.csv'
+            file_path = f'./data/Cleaned/fast/fast_average.csv'
             self.fast_data_original = pd.read_csv(file_path)
 
-            file_path_variance = f'{self.base_path}fast_clean/fast_clean_variance.csv'
+            file_path_variance = f'./data/Cleaned/fast/fast_variance.csv'
             self.fast_data_variance = pd.read_csv(file_path_variance)
 
-            file_path = f'{self.base_path}cyclone_clean/cyclone_clean_average.csv'
+            file_path = f'./data/Cleaned/cyclone/cyclone_average.csv'
             self.cyclone_data_original = pd.read_csv(file_path)
 
-            file_path_variance = f'{self.base_path}cyclone_clean/cyclone_clean_variance.csv'
+            file_path_variance = f'./data/Cleaned/cyclone/cyclone_variance.csv'
             self.cyclone_data_variance = pd.read_csv(file_path_variance)
 
-            file_path = f'{self.base_path}zenoh_clean/zenoh_clean_average.csv'
+            file_path = f'./data/Cleaned/zenoh/zenoh_average.csv'
             self.zenoh_data_original = pd.read_csv(file_path)
 
-            file_path_variance = f'{self.base_path}zenoh_clean/zenoh_clean_variance.csv'
+            file_path_variance = f'./data/Cleaned/zenoh/zenoh_variance.csv'
             self.zenoh_data_variance = pd.read_csv(file_path_variance)
         else:
-            file_path = f'{self.base_path}fast_clean/fast_{self.run_size}/fastrtps_{self.run_size}_exp_{self.run_number}_resampled.csv'
+            file_path = f'./data/Cleaned/fast/fast_{self.run_size}/fast_{self.run_size}_exp_{self.run_number}_resampled.csv'
             self.fast_data_original = pd.read_csv(file_path)
 
-            file_path = f'{self.base_path}cyclone_clean/cyclone_{self.run_size}/cyclonedds_{self.run_size}_exp_{self.run_number}_resampled.csv'
+            file_path = f'./data/Cleaned/cyclone/cyclone_{self.run_size}/cyclone_{self.run_size}_exp_{self.run_number}_resampled.csv'
             self.cyclone_data_original = pd.read_csv(file_path)
 
-            file_path = f'{self.base_path}zenoh_clean/zenoh_{self.run_size}/zenoh_{self.run_size}_exp_{self.run_number}_resampled.csv'
+            file_path = f'./data/Cleaned/zenoh/zenoh_{self.run_size}/zenoh_{self.run_size}_exp_{self.run_number}_resampled.csv'
             self.zenoh_data_original = pd.read_csv(file_path)
 
     def extract_and_interpolate(self):
         self.timestamps_fast = self.fast_data_original['Timestamp']
+        self.timestamps_cyclone = self.cyclone_data_original['Timestamp']
+        self.timestamps_zenoh = self.zenoh_data_original['Timestamp']
 
 
     def plot_data(self):

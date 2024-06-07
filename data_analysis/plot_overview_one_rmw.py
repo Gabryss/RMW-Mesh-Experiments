@@ -30,10 +30,10 @@ class DataPlotter:
 
     def load_data(self):
         if not self.use_run:
-            file_path = f'{self.base_path}{self.rmw}_clean/{self.rmw}_clean_average.csv'
+            file_path = f'./data/Cleaned/{self.rmw}/{self.prefix}_average.csv'
             self.data_original = pd.read_csv(file_path)
 
-            file_path_variance = f'{self.base_path}{self.rmw}_clean/{self.rmw}_clean_variance.csv'
+            file_path_variance = f'./data/Cleaned/{self.rmw}/{self.prefix}_variance.csv'
             self.data_variance = pd.read_csv(file_path_variance)
 
         else:
