@@ -1,5 +1,6 @@
 """
-Takes GPS coordinates as an input and plot them on a graph
+Plot the map overview of the experiments.
+Takes GPS coordinates as an input and plot them on a graph.
 """
 import pandas as pd
 import plotly.graph_objects as go
@@ -7,7 +8,7 @@ import random as rd
 import pathlib
 
 PATH = str(pathlib.Path(__file__).parent.resolve()) + '/data/Cleaned/fast/fast_KILO8'
-NB_TRAJECTORIES = 4
+NB_TRAJECTORIES = 5
 
 
 class Plot_GPS:
