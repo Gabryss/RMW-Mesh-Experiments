@@ -27,8 +27,6 @@ class RMWAverageVarSelect:
 
         # Load all dataframes and convert timestamps from milliseconds to seconds
         dataframes = [pd.read_csv(file) for file in csv_files]
-        for df in dataframes:
-            df['Timestamp'] = (df['Timestamp'] / 1000).round()  # Convert to seconds and round
 
         # Concatenate all dataframes
         concatenated_df = pd.concat(dataframes)

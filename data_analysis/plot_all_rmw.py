@@ -6,9 +6,10 @@ import numpy as np
 import os
 
 class DataPlotter:
-    def __init__(self, display_columns, base_path='/mesh_exp/dataset/', use_run=False, run_size="KILO8", run_number="3", plot_variances=True):
+    def __init__(self, display_columns, base_path='/mesh_exp/dataset/', use_run=False, run_size="KILO8", run_number="3", plot_variances=True, prefix=""):
         self.display_columns = display_columns
         self.base_path = os.path.expanduser("~") + base_path
+        self.prefix = prefix
         self.plot_variances = plot_variances
         self.use_run = use_run
         self.run_size = run_size
@@ -23,23 +24,43 @@ class DataPlotter:
 
     def load_data(self):
         if not self.use_run:
-            file_path = f'./data/Cleaned/fast/fast_average.csv'
-            self.fast_data_original = pd.read_csv(file_path)
+            if self.prefix == '':
+                file_path = f'./data/Cleaned/fast/fast_average.csv'
+                self.fast_data_original = pd.read_csv(file_path)
 
-            file_path_variance = f'./data/Cleaned/fast/fast_variance.csv'
-            self.fast_data_variance = pd.read_csv(file_path_variance)
+                file_path_variance = f'./data/Cleaned/fast/fast_variance.csv'
+                self.fast_data_variance = pd.read_csv(file_path_variance)
 
-            file_path = f'./data/Cleaned/cyclone/cyclone_average.csv'
-            self.cyclone_data_original = pd.read_csv(file_path)
+                file_path = f'./data/Cleaned/cyclone/cyclone_average.csv'
+                self.cyclone_data_original = pd.read_csv(file_path)
 
-            file_path_variance = f'./data/Cleaned/cyclone/cyclone_variance.csv'
-            self.cyclone_data_variance = pd.read_csv(file_path_variance)
+                file_path_variance = f'./data/Cleaned/cyclone/cyclone_variance.csv'
+                self.cyclone_data_variance = pd.read_csv(file_path_variance)
 
-            file_path = f'./data/Cleaned/zenoh/zenoh_average.csv'
-            self.zenoh_data_original = pd.read_csv(file_path)
+                file_path = f'./data/Cleaned/zenoh/zenoh_average.csv'
+                self.zenoh_data_original = pd.read_csv(file_path)
 
-            file_path_variance = f'./data/Cleaned/zenoh/zenoh_variance.csv'
-            self.zenoh_data_variance = pd.read_csv(file_path_variance)
+                file_path_variance = f'./data/Cleaned/zenoh/zenoh_variance.csv'
+                self.zenoh_data_variance = pd.read_csv(file_path_variance)
+            else:
+                file_path = f'./data/Cleaned/fast/{self.prefix}_average.csv'
+                self.fast_data_original = pd.read_csv(file_path)
+
+                file_path_variance = f'./data/Cleaned/fast/{self.prefix}_variance.csv'
+                self.fast_data_variance = pd.read_csv(file_path_variance)
+
+                file_path = f'./data/Cleaned/cyclone/{self.prefix}_average.csv'
+                self.cyclone_data_original = pd.read_csv(file_path)
+
+                file_path_variance = f'./data/Cleaned/cyclone/{self.prefix}_variance.csv'
+                self.cyclone_data_variance = pd.read_csv(file_path_variance)
+
+                file_path = f'./data/Cleaned/zenoh/{self.prefix}_average.csv'
+                self.zenoh_data_original = pd.read_csv(file_path)
+
+                file_path_variance = f'./data/Cleaned/zenoh/{self.prefix}_variance.csv'
+                self.zenoh_data_variance = pd.read_csv(file_path_variance)
+
         else:
             file_path = f'./data/Cleaned/fast/fast_{self.run_size}/fast_{self.run_size}_exp_{self.run_number}_resampled.csv'
             self.fast_data_original = pd.read_csv(file_path)
@@ -64,7 +85,7 @@ class DataPlotter:
 
         # Initialize subplots
         num_plots = len(self.display_columns)
-        fig, axs = plt.subplots(num_plots, 1, figsize=(12, 6 * num_plots))
+        fig, axs = plt.subplots(num_plots, 1, figsize=(20, 5 * num_plots))
 
         if not isinstance(axs, np.ndarray):
             axs = [axs]
@@ -93,6 +114,15 @@ class DataPlotter:
 
         plt.xlabel('Timestamp')
         plt.tight_layout()
+        path = "/home/lchovet/Pictures/Mesh Paper/Bandwidth/"
+        if self.prefix == '':
+            path = path+"Average_CPU"
+        else:
+            path = path+f"Average_CPU_{self.prefix}"
+        if self.plot_variances:
+            path = path+"_variances"
+        path = path+".png"
+        plt.savefig(path,bbox_inches='tight')
         plt.show()
 
 if __name__ == "__main__":
@@ -103,10 +133,11 @@ if __name__ == "__main__":
     parser.add_argument('--run_size', type=str, default="KILO8", help='Size of the run')
     parser.add_argument('--run_number', type=str, default="3", help='Run number')
     parser.add_argument('--plot_variances', action='store_true', help='Plot variances')
+    parser.add_argument('--prefix', type=str, default='', help='Prefix for the CSV files')
 
     args = parser.parse_args()
 
-    plotter = DataPlotter(args.display_columns, use_run=args.use_run, run_size=args.run_size, run_number=args.run_number, plot_variances=args.plot_variances)
+    plotter = DataPlotter(args.display_columns, use_run=args.use_run, run_size=args.run_size, run_number=args.run_number, plot_variances=args.plot_variances, prefix=args.prefix)
     plotter.load_data()
     plotter.extract_and_interpolate()
     plotter.plot_data()
