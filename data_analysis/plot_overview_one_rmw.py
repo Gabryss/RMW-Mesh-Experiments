@@ -88,7 +88,7 @@ class DataPlotter:
 
         axs[1].plot(timestamps_np, data_ping, 'b', label="Reachability", linewidth=3.5)  # Increase line width
 
-        axs[1].set_ylabel("Reachability", fontsize=18)  # Increase font size
+        axs[1].set_ylabel("Reachability[R]", fontsize=18)  # Increase font size
         axs[1].tick_params(axis='both', which='major', labelsize=14)  # Increase tick label size
         axs[1].legend(fontsize=14)  # Increase legend font size
         axs[1].grid(True, linestyle='--', alpha=0.7)
@@ -101,12 +101,12 @@ class DataPlotter:
 
         axs[2].plot(timestamps_np, data_delay, 'b', label="Delay", linewidth=3.5)  # Increase line width
         axs[2].set_ylim(0, 8)
-        axs[2].set_ylabel("Delay", fontsize=18)  # Increase font size
+        axs[2].set_ylabel("Delay[s]", fontsize=18)  # Increase font size
         axs[2].tick_params(axis='both', which='major', labelsize=14)  # Increase tick label size
         axs[2].legend(fontsize=14)  # Increase legend font size
         axs[2].grid(True,linestyle='--', alpha=0.7)
 
-        plt.xlabel('Timestamp', fontsize=18)  # Increase font size
+        plt.xlabel('Timestamp[s]', fontsize=18)  # Increase font size
         plt.xticks(fontsize=14)  # Increase x-tick labels size
         plt.tight_layout()
         plt.savefig(save_path, bbox_inches='tight')  # Save the plot to a file

@@ -45,7 +45,7 @@ for i in range(len(dataframes)):
     plt.plot(timestamps_np[i], delay_local_np[i], label=f'Delay {i+1}', color=color)
     plt.plot(timestamps_np[i], ping_target_np[i], label=f'Ping Target {i+1}', color=color)
 
-plt.xlabel('Timestamp')
+plt.xlabel('Timestamp[s])')
 plt.ylabel('Values')
 plt.title('Delay Local and Ping Target Local over Time')
 plt.legend()

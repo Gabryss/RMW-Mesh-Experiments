@@ -21,6 +21,15 @@ class DataPlotter:
         self.zenoh_data_original = None
         self.zenoh_data_variance = None
         self.timestamps = None
+        if len(self.display_columns) == 1:
+            if self.display_columns[0] == 'Ping_target_local':
+                self.y_legend = 'Reachability[R]'
+            elif self.display_columns[0] == 'Delay_local':
+                self.y_legend = 'Delay[s]'
+            elif self.display_columns[0] == 'Bytes_Send_leo02':
+                self.y_legend = 'Bytes[KB]'
+            else:
+                self.y_legend = self.display_columns[0]
 
     def load_data(self):
         if not self.use_run:
@@ -92,9 +101,14 @@ class DataPlotter:
 
         # Plot each selected column
         for i, column in enumerate(self.display_columns):
-            fast_data_np = self.fast_data_original[column].to_numpy()
-            cyclone_data_np = self.cyclone_data_original[column].to_numpy()
-            zenoh_data_np = self.zenoh_data_original[column].to_numpy()
+            if self.display_columns[0] == 'Bytes_Send_leo02':
+                fast_data_np = self.fast_data_original[column].to_numpy() / 1024
+                cyclone_data_np = self.cyclone_data_original[column].to_numpy() / 1024
+                zenoh_data_np = self.zenoh_data_original[column].to_numpy() / 1024
+            else:
+                fast_data_np = self.fast_data_original[column].to_numpy()
+                cyclone_data_np = self.cyclone_data_original[column].to_numpy()
+                zenoh_data_np = self.zenoh_data_original[column].to_numpy()
 
             if self.plot_variances:
                 fast_variance_np = self.fast_data_variance[column].to_numpy()
@@ -105,18 +119,22 @@ class DataPlotter:
             axs[i].plot(timestamps_np_cyclone, cyclone_data_np, 'r', label="Cyclone")
             axs[i].plot(timestamps_np_zenoh, zenoh_data_np, 'g', label="Zenoh")
 
+
             if self.plot_variances:
                 axs[i].fill_between(timestamps_np_fast, fast_data_np - fast_variance_np, fast_data_np + fast_variance_np, alpha=0.2)
                 axs[i].fill_between(timestamps_np_cyclone, cyclone_data_np - cyclone_variance_np, cyclone_data_np + cyclone_variance_np, alpha=0.2)
                 axs[i].fill_between(timestamps_np_zenoh, zenoh_data_np - zenoh_variance_np, zenoh_data_np + zenoh_variance_np, alpha=0.2)
-            axs[i].set_ylabel(column)
+            if len(self.display_columns) == 1:
+                axs[i].set_ylabel(self.y_legend)
+            else:
+                axs[i].set_ylabel(column)
             axs[i].legend()
             axs[i].grid(True,linestyle='--', alpha=0.7)
 
 
-        plt.xlabel('Timestamp')
+        plt.xlabel('Timestamp[s]')
         plt.tight_layout()
-        folder = 'bandwidth'
+        folder = 'bandwidth'                    # Available: bandwidth, delay, reachability
         path = f"../docs/plots/{folder}/"
         if self.prefix == '':
             path = path+f"Average_{folder}"
