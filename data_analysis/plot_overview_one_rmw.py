@@ -77,6 +77,7 @@ class DataPlotter:
         axs[0].set_ylabel("Pose (scaled)", fontsize=18)  # Increase font size
         axs[0].tick_params(axis='both', which='major', labelsize=14)  # Increase tick label size
         axs[0].legend(fontsize=14)  # Increase legend font size
+        axs[0].grid(True,linestyle='--', alpha=0.7)
 
         # Ping
         data_ping = data_filtered['Ping_target_local'].to_numpy()
@@ -90,7 +91,7 @@ class DataPlotter:
         axs[1].set_ylabel("Reachability", fontsize=18)  # Increase font size
         axs[1].tick_params(axis='both', which='major', labelsize=14)  # Increase tick label size
         axs[1].legend(fontsize=14)  # Increase legend font size
-
+        axs[1].grid(True, linestyle='--', alpha=0.7)
         # Delay
         data_delay = data_filtered['Delay_local'].to_numpy()
 
@@ -103,6 +104,7 @@ class DataPlotter:
         axs[2].set_ylabel("Delay", fontsize=18)  # Increase font size
         axs[2].tick_params(axis='both', which='major', labelsize=14)  # Increase tick label size
         axs[2].legend(fontsize=14)  # Increase legend font size
+        axs[2].grid(True,linestyle='--', alpha=0.7)
 
         plt.xlabel('Timestamp', fontsize=18)  # Increase font size
         plt.xticks(fontsize=14)  # Increase x-tick labels size

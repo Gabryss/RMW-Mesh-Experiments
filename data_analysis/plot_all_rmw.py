@@ -111,14 +111,17 @@ class DataPlotter:
                 axs[i].fill_between(timestamps_np_zenoh, zenoh_data_np - zenoh_variance_np, zenoh_data_np + zenoh_variance_np, alpha=0.2)
             axs[i].set_ylabel(column)
             axs[i].legend()
+            axs[i].grid(True,linestyle='--', alpha=0.7)
+
 
         plt.xlabel('Timestamp')
         plt.tight_layout()
-        path = "/home/lchovet/Pictures/Mesh Paper/Bandwidth/"
+        folder = 'bandwidth'
+        path = f"../docs/plots/{folder}/"
         if self.prefix == '':
-            path = path+"Average_CPU"
+            path = path+f"Average_{folder}"
         else:
-            path = path+f"Average_CPU_{self.prefix}"
+            path = path+f"Average_{folder}_{self.prefix}"
         if self.plot_variances:
             path = path+"_variances"
         path = path+".png"

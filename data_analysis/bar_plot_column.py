@@ -18,6 +18,7 @@ class DataVisualizer:
 
         # Combine all data into a single DataFrame
         self.all_data = pd.concat([self.fast_data, self.cyclone_data, self.zenoh_data], ignore_index=True)
+        self.modify_column_values_core('CPU_percent_leo02')
 
     def get_all_dataframe(self, folder_path, rmw_type):
         # For a given RMW, span over each size
@@ -42,6 +43,10 @@ class DataVisualizer:
             return None
         dataframes = [pd.read_csv(file) for file in csv_files]
         return pd.concat(dataframes, ignore_index=True)  # Ignore index to avoid duplicate labels
+
+    def modify_column_values_core(self, column_name):
+        if column_name in self.all_data.columns:
+            self.all_data[column_name] = self.all_data[column_name] / 4
 
     def plot_boxplot(self, metric):
         if self.all_data.empty:
@@ -70,11 +75,6 @@ class DataVisualizer:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Plot data with variance from CSV files.')
     parser.add_argument('column', type=str, help='Column to plot')
-    # parser.add_argument('--use_run', action='store_true', help='Use run data instead of averaged data')
-    # parser.add_argument('--run_size', type=str, default="KILO8", help='Size of the run')
-    # parser.add_argument('--run_number', type=int, default=3, help='Run numbers for the RMW')
-    # parser.add_argument('--plot_variances', action='store_true', help='Plot variances')
-    # parser.add_argument('--save_path', type=str, default='plot.png', help='Path to save the plot image')
 
     args = parser.parse_args()
 
