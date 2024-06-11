@@ -3,6 +3,7 @@ import glob
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+import argparse
 
 class DataVisualizer:
     def __init__(self) -> None:
@@ -53,22 +54,38 @@ class DataVisualizer:
         # Define a color palette
         palette = {"fast": "blue", "cyclone": "red", "zenoh": "green"}
         
-        plt.figure(figsize=(14, 8))
-        sns.boxplot(data=self.all_data, x='Message_Size', y=metric, hue='RMW', palette=palette, showfliers=False)
+        plt.figure(figsize=(7, 5))
+        sns.boxplot(data=self.all_data, x='Message_Size', y=metric, hue='RMW', palette=palette, showfliers=False,linewidth=2.5)
         plt.title(f'Boxplot of {metric} for Different RMWs and Message Sizes')
         plt.xlabel('Message Size')
         plt.ylabel(metric)
         plt.legend(title='RMW')
+        plt.grid(True, linestyle='--', alpha=0.7)
+        folder = 'CPU and RAM'
+        path = f'../docs/plots/{folder}/box_{metric}.png'
+        plt.savefig(path,bbox_inches='tight')
         plt.show()
 
-# Example usage:
-visualizer = DataVisualizer()
 
-# Debug: print the structure of the combined DataFrame
-print("Combined DataFrame head:")
-print(visualizer.all_data.head())
-print("\nCombined DataFrame columns:")
-print(visualizer.all_data.columns)
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Plot data with variance from CSV files.')
+    parser.add_argument('column', type=str, help='Column to plot')
+    # parser.add_argument('--use_run', action='store_true', help='Use run data instead of averaged data')
+    # parser.add_argument('--run_size', type=str, default="KILO8", help='Size of the run')
+    # parser.add_argument('--run_number', type=int, default=3, help='Run numbers for the RMW')
+    # parser.add_argument('--plot_variances', action='store_true', help='Plot variances')
+    # parser.add_argument('--save_path', type=str, default='plot.png', help='Path to save the plot image')
 
-# Plot the boxplot
-visualizer.plot_boxplot('Bytes_Received_local')
+    args = parser.parse_args()
+
+    # Example usage:
+    visualizer = DataVisualizer()
+
+    # Debug: print the structure of the combined DataFrame
+    # print("Combined DataFrame head:")
+    # print(visualizer.all_data.head())
+    # print("\nCombined DataFrame columns:")
+    # print(visualizer.all_data.columns)
+
+    # Plot the boxplot
+    visualizer.plot_boxplot(args.column)
