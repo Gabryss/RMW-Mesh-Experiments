@@ -10,10 +10,13 @@ class DataPlotter:
         self.rmw = rmw
         if self.rmw == "fast":
             self.prefix = "fastrtps"
+            self.color = 'b'
         elif self.rmw == "cyclone":
             self.prefix = "cyclonedds"
+            self.color = 'r'
         elif self.rmw == "zenoh":
             self.prefix = "zenoh"
+            self.color = 'g'
         self.display_columns = ['LAT_leo02','LONG_leo02','Ping_target_local', 'Delay_local']
         self.base_path = os.path.expanduser("~") + base_path
         self.plot_variances = plot_variances
@@ -27,6 +30,7 @@ class DataPlotter:
         self.zenoh_data_original = None
         self.zenoh_data_variance = None
         self.timestamps = None
+        
 
     def load_data(self):
         if not self.use_run:
@@ -86,9 +90,9 @@ class DataPlotter:
             variance_ping = self.data_variance['Ping_target_local'].dropna().to_numpy()
             axs[1].fill_between(timestamps_np, data_ping - variance_ping, data_ping + variance_ping, alpha=0.2)
 
-        axs[1].plot(timestamps_np, data_ping, 'b', label="Reachability", linewidth=3.5)  # Increase line width
+        axs[1].plot(timestamps_np, data_ping, self.color, label="Reachability", linewidth=3.5)  # Increase line width
 
-        axs[1].set_ylabel("Reachability[R]", fontsize=18)  # Increase font size
+        axs[1].set_ylabel("Reachability", fontsize=18)  # Increase font size
         axs[1].tick_params(axis='both', which='major', labelsize=14)  # Increase tick label size
         axs[1].legend(fontsize=14)  # Increase legend font size
         axs[1].grid(True, linestyle='--', alpha=0.7)
@@ -99,7 +103,7 @@ class DataPlotter:
             variance_delay = self.data_variance['Delay_local'].dropna().to_numpy()
             axs[2].fill_between(timestamps_np, data_delay - variance_delay, data_delay + variance_delay, alpha=0.2)
 
-        axs[2].plot(timestamps_np, data_delay, 'b', label="Delay", linewidth=3.5)  # Increase line width
+        axs[2].plot(timestamps_np, data_delay, self.color, label="Delay", linewidth=3.5)  # Increase line width
         axs[2].set_ylim(0, 8)
         axs[2].set_ylabel("Delay[s]", fontsize=18)  # Increase font size
         axs[2].tick_params(axis='both', which='major', labelsize=14)  # Increase tick label size
