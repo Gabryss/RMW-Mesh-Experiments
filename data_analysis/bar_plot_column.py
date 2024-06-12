@@ -79,14 +79,19 @@ class DataVisualizer:
         
         if metric == 'CPU_percent_leo02' or metric == 'CPU_percent_local':
             y_legend = 'CPU usage[%]'
+            folder = 'CPU'
         elif metric == 'CPU_time_leo02' or metric == 'CPU_time_local':
             y_legend = 'Time[s]'
+            folder = 'CPU'
         elif metric == 'RAM_percent_leo02' or metric == 'RAM_percent_local':
             y_legend = 'RAM usage[%]'
+            folder = 'RAM'
         elif metric == 'RAM_info_leo02' or metric == 'RAM_info_local':
             y_legend = 'RAM usage[MB]'
+            folder = 'RAM'
         elif metric == 'Bytes_Send_leo02' or metric == 'Bytes_Received_local':
             y_legend = 'Bytes[KB]'
+            folder = 'bandwidth'
         else:
             y_legend = metric
         
@@ -97,13 +102,11 @@ class DataVisualizer:
         
         plt.figure(figsize=(7, 5))
         box_plot = sns.boxplot(data=self.all_data, x='Message_Size', y=metric, hue='RMW', palette=palette, showfliers=False,linewidth=2.5)
-        # plt.title(f'Boxplot of {metric} for Different RMWs and Message Sizes')
         box_plot.set_xticklabels([1,2,4,8,16,32,64])
         plt.xlabel('Message size[KB]')
         plt.ylabel(y_legend)
         plt.legend(title='RMW')
         plt.grid(True, linestyle='--', alpha=0.7)
-        folder = 'RAM'                                # Available: bandwidth, CPU, RAM
         path = f'../docs/plots/{folder}/box_{metric}.png'
         plt.savefig(path,bbox_inches='tight')
         plt.show()

@@ -23,13 +23,17 @@ class DataPlotter:
         self.timestamps = None
         if len(self.display_columns) == 1:
             if self.display_columns[0] == 'Ping_target_local':
-                self.y_legend = 'Reachability[R]'
+                self.y_legend = 'Reachability'
+                self.folder = 'reachability'
             elif self.display_columns[0] == 'Delay_local':
                 self.y_legend = 'Delay[s]'
+                self.folder = 'delay'
             elif self.display_columns[0] == 'Bytes_Send_leo02':
                 self.y_legend = 'Bytes[KB]'
+                self.folder = 'bandwidth'
             else:
                 self.y_legend = self.display_columns[0]
+                self.folder = ''
 
     def load_data(self):
         if not self.use_run:
@@ -134,12 +138,11 @@ class DataPlotter:
 
         plt.xlabel('Timestamp[s]')
         plt.tight_layout()
-        folder = 'bandwidth'                    # Available: bandwidth, delay, reachability
-        path = f"../docs/plots/{folder}/"
+        path = f"../docs/plots/{self.folder}/"
         if self.prefix == '':
-            path = path+f"Average_{folder}"
+            path = path+f"Average_{self.folder}"
         else:
-            path = path+f"Average_{folder}_{self.prefix}"
+            path = path+f"Average_{self.folder}_{self.prefix}"
         if self.plot_variances:
             path = path+"_variances"
         path = path+".png"
